@@ -100,7 +100,6 @@ class MyApp extends ConsumerWidget {
 ```dart
 import 'package:core_architecture/core_architecture.dart';
 import 'package:flutter/material.dart';
-import 'package:kelime_hocam/core/routes/route_names.dart';
 
 import '../../features/welcome/pages/splash_page.dart';
 
