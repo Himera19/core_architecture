@@ -236,10 +236,11 @@ SpacingUtils.all(AppSpacings.wMd)
 SpacingUtils.horizontal(AppSpacings.wLg)
 
 // Gap (boşluk)
+// hMd: Column içi, wMd: Row içi
 Column(
 children: [
 Widget1(),
-Gap.md,
+Gap.hMd,
 Widget2(),
 ],
 )
@@ -809,9 +810,9 @@ Detaylı kullanım için paket içindeki dosyaları inceleyin:
 
 ---
 
-**Versiyon:** 1.1.2 
+**Versiyon:** 1.1.3 
 **Durum:** Aktif geliştirme aşamasında  
-**Son Güncelleme:** 20/12/2024
+**Son Güncelleme:** 11/01/2026
 
 ---
 

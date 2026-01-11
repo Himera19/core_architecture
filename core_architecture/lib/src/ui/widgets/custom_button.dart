@@ -9,7 +9,7 @@ enum ButtonSize { small, medium, large }
 
 class CustomButton extends StatelessWidget {
   final String text;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
 
   final ButtonType type;
   final ButtonSize size;

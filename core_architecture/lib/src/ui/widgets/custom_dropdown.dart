@@ -248,7 +248,7 @@ class _DropdownBottomSheetState<T> extends State<_DropdownBottomSheet<T>> {
             ),
           ),
 
-          Gap.md,
+          Gap.hMd,
 
           if (widget.type == CustomDropdownType.searchable) ...[
             Padding(
@@ -311,7 +311,7 @@ class _DropdownBottomSheetState<T> extends State<_DropdownBottomSheet<T>> {
                 ),
               ),
             ),
-            Gap.md,
+            Gap.hMd,
           ],
 
           Flexible(
@@ -626,7 +626,7 @@ class _MultiSelectBottomSheetState<T>
             ),
           ),
 
-          Gap.md,
+          Gap.hMd,
 
           Padding(
             padding: SpacingUtils.horizontal(AppSpacings.wMd),
@@ -650,8 +650,7 @@ class _MultiSelectBottomSheetState<T>
             ),
           ),
 
-          Gap.sm,
-
+          Gap.hSm,
           Flexible(
             child: ListView.builder(
               shrinkWrap: true,
@@ -674,7 +673,7 @@ class _MultiSelectBottomSheetState<T>
                           onChanged: (_) => _toggleSelection(item),
                           activeColor: colors.primary,
                         ),
-                        Gap.sm,
+                        Gap.hSm,
                         Expanded(
                           child: Text(
                             widget.itemLabel(item),
