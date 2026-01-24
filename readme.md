@@ -158,6 +158,27 @@ Page<dynamic> _buildPageWithTransition(
     reverseTransitionDuration: AppDurations.normal,
   );
 }
+
+// A wrapper widget that intercepts the back button and navigates to the Home tab
+// instead of popping the app/route, unless already at Home.
+class BackToHomeWrapper extends StatelessWidget {
+  final Widget child;
+
+  const BackToHomeWrapper({super.key, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        // Go to Home
+        context.go(RouteNames.home);
+      },
+      child: child,
+    );
+  }
+}
 ```
 
 ---
@@ -810,9 +831,9 @@ Detaylı kullanım için paket içindeki dosyaları inceleyin:
 
 ---
 
-**Versiyon:** 1.1.3 
+**Versiyon:** 1.1.4 
 **Durum:** Aktif geliştirme aşamasında  
-**Son Güncelleme:** 11/01/2026
+**Son Güncelleme:** 24/01/2026
 
 ---
 
