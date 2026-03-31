@@ -20,12 +20,7 @@ export 'src/providers/theme_provider.dart';
 export 'src/providers/onboarding_provider.dart';
 
 // ==================== Backend Contracts ====================
-// ==================== Backend Contracts ====================
 export 'src/backends/contracts/crud_contract.dart';
-
-// ==================== Supabase Backend ====================
-export 'src/backends/supabase/supabase_service.dart';
-export 'src/backends/supabase/supabase_providers.dart';
 
 // ==================== Services ====================
 export 'src/services/storage_service.dart';
@@ -47,6 +42,12 @@ export 'src/ui/tokens/app_spacings.dart';
 export 'src/ui/tokens/app_typography.dart';
 export 'src/ui/tokens/app_opacities.dart';
 export 'src/ui/tokens/app_elevations.dart';
+
+// Responsive
+export 'src/ui/responsive/app_breakpoints.dart';
+export 'src/ui/responsive/responsive_builder.dart';
+export 'src/ui/responsive/responsive_value.dart';
+export 'src/ui/responsive/platform_info.dart';
 
 // Widgets
 export 'src/ui/widgets/custom_app_bar.dart';
@@ -70,7 +71,10 @@ export 'src/utils/validators.dart';
 // Extensions
 export 'src/utils/extensions/context_extensions.dart';
 
+// ==================== Optional Modules ====================
+// Purchase (requires purchases_flutter — remove if not needed)
+export 'src/core/errors/purchase_failure.dart';
+
 // ==================== External Packages (Re-export) ====================
 export 'package:flutter_riverpod/flutter_riverpod.dart';
-export 'package:flutter_screenutil/flutter_screenutil.dart';
 export 'package:go_router/go_router.dart';

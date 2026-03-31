@@ -1,7 +1,9 @@
 // lib/src/core/errors/exceptions.dart
 
-/// Base class for all exceptions
-sealed class AppException implements Exception {
+/// Base class for all exceptions.
+///
+/// Extend this class to add project-specific exception types.
+abstract class AppException implements Exception {
   final String message;
   final String? code;
   final dynamic data;

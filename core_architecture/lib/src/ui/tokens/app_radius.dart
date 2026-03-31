@@ -1,11 +1,8 @@
-// core/ui/tokens/app_radius.dart
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-
 final class AppRadius {
   AppRadius._();
 
-  static double get sm => 4.r;
-  static double get md => 8.r;
-  static double get lg => 16.r;
-  static double get xl  => 24.r;
+  static const double sm = 4;
+  static const double md = 8;
+  static const double lg = 16;
+  static const double xl = 24;
 }

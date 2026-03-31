@@ -240,8 +240,8 @@ class _DropdownBottomSheetState<T> extends State<_DropdownBottomSheet<T>> {
         children: [
           Container(
             margin: SpacingUtils.onlyTop(AppSpacings.hSm),
-            width: 40.w,
-            height: 4.h,
+            width: 40,
+            height: 4,
             decoration: BoxDecoration(
               color: colors.onSurfaceVariant.withValues(alpha: 0.4),
               borderRadius: BorderRadius.circular(AppRadius.sm),
@@ -618,8 +618,8 @@ class _MultiSelectBottomSheetState<T>
         children: [
           Container(
             margin: SpacingUtils.onlyTop(AppSpacings.hSm),
-            width: 40.w,
-            height: 4.h,
+            width: 40,
+            height: 4,
             decoration: BoxDecoration(
               color: colors.onSurfaceVariant.withValues(alpha: 0.4),
               borderRadius: BorderRadius.circular(AppRadius.sm),

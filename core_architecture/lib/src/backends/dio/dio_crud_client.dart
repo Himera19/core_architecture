@@ -327,7 +327,7 @@ class DioCrudClient implements CrudContract {
     try {
       _logger.d('Checking existence: HEAD /$table/$id', tag: 'DioCRUD');
 
-      final response = await _dio.get('/$table/$id');
+      await _dio.get('/$table/$id');
 
       _logger.d('Exists check result: true', tag: 'DioCRUD');
       return true;

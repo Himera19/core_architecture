@@ -6,13 +6,13 @@ class SpinKitIndicator {
   const SpinKitIndicator._();
 
   static SpinKitChasingDots primaryColored(BuildContext context, {double? size}) {
-    return SpinKitChasingDots(size: size ??50.h, color: context.colorScheme.primary);
+    return SpinKitChasingDots(size: size ?? 50, color: context.colorScheme.primary);
   }
 
   static SpinKitChasingDots onPrimaryColored(
     BuildContext context, {
     double? size,
   }) {
-    return SpinKitChasingDots(size: size??50.h, color: context.colorScheme.onPrimary);
+    return SpinKitChasingDots(size: size ?? 50, color: context.colorScheme.onPrimary);
   }
 }

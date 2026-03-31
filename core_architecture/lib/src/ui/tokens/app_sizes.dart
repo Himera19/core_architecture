@@ -1,53 +1,51 @@
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-
 final class AppSizes {
   AppSizes._();
 
   // Icon sizes
-  static double get iconXxs => 4.h;
-  static double get iconXs => 8.h;
-  static double get iconSm => 16.h;
-  static double get iconMd => 24.h;
-  static double get iconLg => 32.h;
-  static double get iconXl => 64.h;
-  static double get iconXxl => 128.h;
+  static const double iconXxs = 4;
+  static const double iconXs = 8;
+  static const double iconSm = 16;
+  static const double iconMd = 24;
+  static const double iconLg = 32;
+  static const double iconXl = 64;
+  static const double iconXxl = 128;
 
   // Button heights
-  static double get buttonSm => 40.h;
-  static double get buttonMd => 48.h;
-  static double get buttonLg => 56.h;
+  static const double buttonSm = 40;
+  static const double buttonMd = 48;
+  static const double buttonLg = 56;
 
   // Inputs
-  static double get inputHeight => 56.h;
+  static const double inputHeight = 56;
 
   // Cards
-  static double get cardWidth => 300.w;
-  static double get cardHeight => 180.h;
+  static const double cardWidth = 300;
+  static const double cardHeight = 180;
 
   // Dialogs
-  static double get dialogMaxWidth => 500.w;
-  static double get dialogButtonWidth => 120.w;
-  static double get dialogMaxHeight => 600.h;
-  static double get dialogMaxHeightLarge => 700.h;
+  static const double dialogMaxWidth = 500;
+  static const double dialogButtonWidth = 120;
+  static const double dialogMaxHeight = 600;
+  static const double dialogMaxHeightLarge = 700;
 
   // Lists
-  static double get listItemHeight => 80.h;
-  static double get listItemMinHeight => 60.h;
+  static const double listItemHeight = 80;
+  static const double listItemMinHeight = 60;
 
   // Handles (drag handles, etc.)
-  static double get handleWidth => 40.w;
-  static double get handleHeight => 4.h;
+  static const double handleWidth = 40;
+  static const double handleHeight = 4;
 
   // Avatar/Profile
-  static double get avatarSm => 32.h;
-  static double get avatarMd => 48.h;
-  static double get avatarLg => 64.h;
+  static const double avatarSm = 32;
+  static const double avatarMd = 48;
+  static const double avatarLg = 64;
 
   // Thumbnails
-  static double get thumbnailSm => 60.h;
-  static double get thumbnailMd => 100.h;
-  static double get thumbnailLg => 150.h;
+  static const double thumbnailSm = 60;
+  static const double thumbnailMd = 100;
+  static const double thumbnailLg = 150;
 
-  // Thumbnails
-  static double get onBoard => 250.h;
+  // OnBoard
+  static const double onBoard = 250;
 }

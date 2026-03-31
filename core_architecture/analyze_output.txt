@@ -1,0 +1,24 @@
+﻿Analyzing core_architecture...                                  
+
+warning - The value of the local variable 'response' isn't used - lib\src\backends\dio\dio_crud_client.dart:330:13 - unused_local_variable
+   info - The import of 'app_colors.dart' is unnecessary because all of the used elements are also provided by the import of 'package:core_architecture/core_architecture.dart' - lib\src\ui\tokens\app_elevations.dart:3:8 - unnecessary_import
+  error - The getter 'w' isn't defined for the type 'int' - lib\src\ui\widgets\custom_dropdown.dart:243:23 - undefined_getter
+  error - The getter 'h' isn't defined for the type 'int' - lib\src\ui\widgets\custom_dropdown.dart:244:23 - undefined_getter
+  error - The getter 'w' isn't defined for the type 'int' - lib\src\ui\widgets\custom_dropdown.dart:621:23 - undefined_getter
+  error - The getter 'h' isn't defined for the type 'int' - lib\src\ui\widgets\custom_dropdown.dart:622:23 - undefined_getter
+
+flutter : 6 issues found. (
+ran in 1.6s)
+At line:1 char:1
++ flutter analyze 2>&1 | Ou
+t-File -FilePath ".\analyze
+_output.txt" -Enc ...
++ ~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo         
+     : NotSpecified: (6 i  
+  ssues found. (ran in 1   
+ .6s):String) [], Remot    
+eException
+    + FullyQualifiedErrorI 
+   d : NativeCommandError
+ 

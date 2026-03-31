@@ -1,32 +1,30 @@
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-
 final class AppSpacings {
   AppSpacings._();
 
   // Width-based spacings
-  static double get wXxs => 4.w;
-  static double get wXs => 8.w;
-  static double get wSm => 12.w;
-  static double get wMd => 16.w;
-  static double get wLg => 24.w;
-  static double get wXl => 32.w;
-  static double get wXxl => 40.w;
+  static const double wXxs = 4;
+  static const double wXs = 8;
+  static const double wSm = 12;
+  static const double wMd = 16;
+  static const double wLg = 24;
+  static const double wXl = 32;
+  static const double wXxl = 40;
 
   // Height-based spacings
-  static double get hXxs => 4.h;
-  static double get hXs => 8.h;
-  static double get hSm => 12.h;
-  static double get hMd => 16.h;
-  static double get hLg => 24.h;
-  static double get hXl => 32.h;
-  static double get hXxl => 40.h;
+  static const double hXxs = 4;
+  static const double hXs = 8;
+  static const double hSm = 12;
+  static const double hMd = 16;
+  static const double hLg = 24;
+  static const double hXl = 32;
+  static const double hXxl = 40;
 
   // Radius-based spacings
-  static double get rXxs => 4.r;
-  static double get rXs => 8.r;
-  static double get rSm => 12.r;
-  static double get rMd => 16.r;
-  static double get rLg => 24.r;
-  static double get rXl => 32.r;
-  static double get rXxl => 40.r;
+  static const double rXxs = 4;
+  static const double rXs = 8;
+  static const double rSm = 12;
+  static const double rMd = 16;
+  static const double rLg = 24;
+  static const double rXl = 32;
+  static const double rXxl = 40;
 }

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'app_colors.dart';
 
 final class AppTypography {
@@ -9,110 +8,110 @@ final class AppTypography {
   static const String fontFamily = "Rubik";
 
   // DISPLAY
-  static TextStyle get displayLg => TextStyle(
-    fontSize: 57.sp,
+  static const TextStyle displayLg = TextStyle(
+    fontSize: 57,
     fontFamily: fontFamily,
     fontWeight: FontWeight.w400,
     color: AppColors.textPrimaryLight,
   );
 
-  static TextStyle get displayMd => TextStyle(
-    fontSize: 45.sp,
+  static const TextStyle displayMd = TextStyle(
+    fontSize: 45,
     fontFamily: fontFamily,
     fontWeight: FontWeight.w400,
     color: AppColors.textPrimaryLight,
   );
 
-  static TextStyle get displaySm => TextStyle(
-    fontSize: 36.sp,
+  static const TextStyle displaySm = TextStyle(
+    fontSize: 36,
     fontFamily: fontFamily,
     fontWeight: FontWeight.w400,
     color: AppColors.textPrimaryLight,
   );
 
   // HEADLINE
-  static TextStyle get headlineLg => TextStyle(
-    fontSize: 32.sp,
+  static const TextStyle headlineLg = TextStyle(
+    fontSize: 32,
     fontFamily: fontFamily,
     fontWeight: FontWeight.w600,
     color: AppColors.textPrimaryLight,
   );
 
-  static TextStyle get headlineMd => TextStyle(
-    fontSize: 28.sp,
+  static const TextStyle headlineMd = TextStyle(
+    fontSize: 28,
     fontFamily: fontFamily,
     fontWeight: FontWeight.w600,
     color: AppColors.textPrimaryLight,
   );
 
-  static TextStyle get headlineSm => TextStyle(
-    fontSize: 24.sp,
+  static const TextStyle headlineSm = TextStyle(
+    fontSize: 24,
     fontFamily: fontFamily,
     fontWeight: FontWeight.w600,
     color: AppColors.textPrimaryLight,
   );
 
   // TITLE
-  static TextStyle get titleLg => TextStyle(
-    fontSize: 22.sp,
+  static const TextStyle titleLg = TextStyle(
+    fontSize: 22,
     fontFamily: fontFamily,
     fontWeight: FontWeight.w600,
     color: AppColors.textPrimaryLight,
   );
 
-  static TextStyle get titleMd => TextStyle(
-    fontSize: 16.sp,
+  static const TextStyle titleMd = TextStyle(
+    fontSize: 16,
     fontFamily: fontFamily,
     fontWeight: FontWeight.w600,
     color: AppColors.textPrimaryLight,
   );
 
-  static TextStyle get titleSm => TextStyle(
-    fontSize: 14.sp,
+  static const TextStyle titleSm = TextStyle(
+    fontSize: 14,
     fontFamily: fontFamily,
     fontWeight: FontWeight.w500,
     color: AppColors.textPrimaryLight,
   );
 
   // BODY
-  static TextStyle get bodyLg => TextStyle(
-    fontSize: 16.sp,
+  static const TextStyle bodyLg = TextStyle(
+    fontSize: 16,
     fontFamily: fontFamily,
     fontWeight: FontWeight.w400,
     color: AppColors.textPrimaryLight,
   );
 
-  static TextStyle get bodyMd => TextStyle(
-    fontSize: 14.sp,
+  static const TextStyle bodyMd = TextStyle(
+    fontSize: 14,
     fontFamily: fontFamily,
     fontWeight: FontWeight.w400,
     color: AppColors.textPrimaryLight,
   );
 
-  static TextStyle get bodySm => TextStyle(
-    fontSize: 12.sp,
+  static const TextStyle bodySm = TextStyle(
+    fontSize: 12,
     fontFamily: fontFamily,
     fontWeight: FontWeight.w400,
     color: AppColors.textPrimaryLight,
   );
 
   // LABEL
-  static TextStyle get labelLg => TextStyle(
-    fontSize: 14.sp,
+  static const TextStyle labelLg = TextStyle(
+    fontSize: 14,
     fontFamily: fontFamily,
     fontWeight: FontWeight.w500,
     color: AppColors.textPrimaryLight,
   );
 
-  static TextStyle get labelMd => TextStyle(
-    fontSize: 12.sp,
+  static const TextStyle labelMd = TextStyle(
+    fontSize: 12,
     fontFamily: fontFamily,
     fontWeight: FontWeight.w500,
     color: AppColors.textPrimaryLight,
   );
 
-  static TextStyle get labelSm => TextStyle(
-    fontSize: 11.sp,
+  static const TextStyle labelSm = TextStyle(
+    fontSize: 11,
     fontFamily: fontFamily,
     fontWeight: FontWeight.w500,
     color: AppColors.textPrimaryLight,

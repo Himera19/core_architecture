@@ -1,19 +1,27 @@
 import 'package:flutter/material.dart';
-import 'package:core_architecture/core_architecture.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+import '../core/core_providers.dart';
+import '../core/logging/logger_service.dart';
+import '../services/storage_service.dart';
 
 part 'theme_provider.g.dart';
 
 /// Manages the app theme mode with secure persistence.
+///
+/// Uses [StorageService] and [LoggerService] via Riverpod DI,
+/// making it fully testable and consistent with the architecture.
 @Riverpod(keepAlive: true)
 class Theme extends _$Theme {
-  final LoggerService _loggerService = LoggerService();
-  final StorageService _storageService = SecureStorageService();
+  late final LoggerService _logger;
+  late final StorageService _storage;
 
   static const String _storageKey = 'theme_mode';
 
   @override
   ThemeMode build() {
+    _logger = ref.watch(loggerServiceProvider);
+    _storage = ref.watch(storageServiceProvider);
     _loadTheme();
     return ThemeMode.light;
   }
@@ -21,15 +29,15 @@ class Theme extends _$Theme {
   /// Loads saved theme mode from secure storage.
   Future<void> _loadTheme() async {
     try {
-      final String? stored = await _storageService.read(key: _storageKey);
+      final String? stored = await _storage.read(key: _storageKey);
       if (stored == 'light') {
         state = ThemeMode.light;
       } else if (stored == 'dark') {
         state = ThemeMode.dark;
       }
-      _loggerService.i('Theme loaded: ${state.name}');
+      _logger.i('Theme loaded: ${state.name}', tag: 'Theme');
     } catch (e, st) {
-      _loggerService.e('Theme load failed: $e', stackTrace: st);
+      _logger.e('Theme load failed', error: e, stackTrace: st, tag: 'Theme');
     }
   }
 
@@ -37,10 +45,10 @@ class Theme extends _$Theme {
   Future<void> setThemeMode(ThemeMode mode) async {
     try {
       state = mode;
-      await _storageService.write(key: _storageKey, value: mode.name);
-      _loggerService.i('Theme set to ${mode.name}');
+      await _storage.write(key: _storageKey, value: mode.name);
+      _logger.i('Theme set to ${mode.name}', tag: 'Theme');
     } catch (e, st) {
-      _loggerService.e('Theme set failed: $e', stackTrace: st);
+      _logger.e('Theme set failed', error: e, stackTrace: st, tag: 'Theme');
     }
   }
 
@@ -51,10 +59,11 @@ class Theme extends _$Theme {
           ? ThemeMode.dark
           : ThemeMode.light;
       state = newMode;
-      await _storageService.write(key: _storageKey, value: newMode.name);
-      _loggerService.i('Theme switched to ${newMode.name}');
+      await _storage.write(key: _storageKey, value: newMode.name);
+      _logger.i('Theme switched to ${newMode.name}', tag: 'Theme');
     } catch (e, st) {
-      _loggerService.e('Theme toggle failed: $e', stackTrace: st);
+      _logger.e('Theme toggle failed', error: e, stackTrace: st, tag: 'Theme');
     }
   }
 }
+
