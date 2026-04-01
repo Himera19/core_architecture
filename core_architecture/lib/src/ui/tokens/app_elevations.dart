@@ -1,5 +1,7 @@
-import 'package:core_architecture/core_architecture.dart';
 import 'package:flutter/material.dart';
+
+import 'app_colors.dart';
+import 'app_opacities.dart';
 
 final class AppElevations {
   AppElevations._();

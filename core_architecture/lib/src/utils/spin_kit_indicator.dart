@@ -1,6 +1,7 @@
-import 'package:core_architecture/core_architecture.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+
+import 'extensions/context_extensions.dart';
 
 class SpinKitIndicator {
   const SpinKitIndicator._();

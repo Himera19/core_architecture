@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../core/constants/storage_constants.dart';
 import '../core/core_providers.dart';
 import '../core/logging/logger_service.dart';
 import '../services/storage_service.dart';
@@ -12,11 +13,11 @@ part 'theme_provider.g.dart';
 /// Uses [StorageService] and [LoggerService] via Riverpod DI,
 /// making it fully testable and consistent with the architecture.
 @Riverpod(keepAlive: true)
-class Theme extends _$Theme {
+class ThemeNotifier extends _$ThemeNotifier {
   late final LoggerService _logger;
   late final StorageService _storage;
 
-  static const String _storageKey = 'theme_mode';
+  static const String _storageKey = StorageConstants.themeMode;
 
   @override
   ThemeMode build() {

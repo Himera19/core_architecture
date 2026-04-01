@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-import '../../../core_architecture.dart';
+import '../../backends/supabase/supabase_service.dart';
+import '../../backends/dio/dio_service.dart';
+import '../logging/logger_service.dart';
 
 
 class CoreConfig {
@@ -11,12 +13,17 @@ class CoreConfig {
   final bool useDio;
   final String? dioBaseUrl;
 
+  /// The Supabase RPC function name used to delete a user account.
+  /// Defaults to `'delete_user'`.
+  final String deleteUserRpcName;
+
   const CoreConfig({
     required this.appName,
     this.envFile = '.env',
     this.useSupabase = false,
     this.useDio = false,
     this.dioBaseUrl,
+    this.deleteUserRpcName = 'delete_user',
   });
 }
 
@@ -51,14 +58,16 @@ class CoreInitializer {
       // Initialize backends based on configuration
       if (config.useSupabase) {
         _logger.i('[→] Initializing Supabase...', tag: 'Core');
-        // Supabase initialization will be called from the backend-specific code
-        _logger.i('[✓] Supabase ready for initialization', tag: 'Core');
+        await SupabaseService.initialize(
+          deleteUserRpcName: config.deleteUserRpcName,
+        );
+        _logger.i('[✓] Supabase initialized', tag: 'Core');
       }
 
       if (config.useDio) {
         _logger.i('[→] Initializing Dio...', tag: 'Core');
-        // Dio initialization will be called from the backend-specific code
-        _logger.i('[✓] Dio ready for initialization', tag: 'Core');
+        await DioService.initialize(baseUrl: config.dioBaseUrl);
+        _logger.i('[✓] Dio initialized', tag: 'Core');
       }
 
       if (!config.useSupabase && !config.useDio) {

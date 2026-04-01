@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:core_architecture/core_architecture.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../utils/extensions/context_extensions.dart';
 
 /// Reusable bottom navigation bar widget
 /// Projects should pass their own navigation items and routes
@@ -37,7 +39,6 @@ class Navbar extends StatelessWidget {
         currentIndex: _getCurrentIndex(location),
         onTap: (index) => _onItemTapped(context, index),
         type: BottomNavigationBarType.fixed,
-        iconSize: AppSizes.iconMd,
         elevation: 0,
         selectedItemColor: colors.primary,
         unselectedItemColor: colors.onSurfaceVariant,

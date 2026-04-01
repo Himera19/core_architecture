@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:core_architecture/core_architecture.dart';
+
+import '../tokens/app_colors.dart';
+import '../tokens/app_typography.dart';
+import 'app_color_scheme.dart';
 
 ThemeData get darkTheme => ThemeData(
   useMaterial3: true,
@@ -7,7 +10,7 @@ ThemeData get darkTheme => ThemeData(
   colorScheme: darkColorScheme,
 
   fontFamily: AppTypography.fontFamily,
-  
+
   textTheme: Typography.material2021().white.apply(
     fontFamily: AppTypography.fontFamily,
     bodyColor: AppColors.textPrimaryDark,

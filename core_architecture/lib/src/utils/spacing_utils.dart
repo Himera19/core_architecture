@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
-import 'package:core_architecture/core_architecture.dart';
+import '../ui/tokens/app_spacings.dart';
 
 final class SpacingUtils {
   SpacingUtils._();
   static EdgeInsets all(double value) => EdgeInsets.all(value);
-  static EdgeInsets zero = EdgeInsets.zero ;
+  static const EdgeInsets zero = EdgeInsets.zero;
 
   // Only
   static EdgeInsets onlyRight(double value) => EdgeInsets.only(right: value);
@@ -26,10 +26,10 @@ final class SpacingUtils {
   }) => EdgeInsets.symmetric(vertical: vertical, horizontal: horizontal);
 
   // Presets
-  static EdgeInsets get page => EdgeInsets.symmetric(
+  static EdgeInsets get page => const EdgeInsets.symmetric(
     horizontal: AppSpacings.rMd,
     vertical: AppSpacings.hSm,
   );
 
-  static EdgeInsets get card => EdgeInsets.all(AppSpacings.rSm);
+  static EdgeInsets get card => const EdgeInsets.all(AppSpacings.rSm);
 }

@@ -6,312 +6,168 @@ class Validators {
 
   // ==================== Email Validation ====================
 
-  static String? email(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Mail adresi gerekli';
-    }
+  static String? email(String? value, {required String errorMessage}) {
+    if (value == null || value.isEmpty) return errorMessage;
 
     final emailRegex = RegExp(
       r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
     );
 
-    if (!emailRegex.hasMatch(value)) {
-      return 'Geçerli bir mail adresi girin';
-    }
+    if (!emailRegex.hasMatch(value)) return errorMessage;
 
     return null;
   }
 
   // ==================== Password Validation ====================
 
-  static String? password(String? value, {int minLength = 6}) {
-    if (value == null || value.isEmpty) {
-      return 'Şifre gerekli';
-    }
-
-    if (value.length < minLength) {
-      return 'Şifre en az $minLength karakter olmalı';
-    }
-
+  static String? password(
+    String? value, {
+    int minLength = 6,
+    required String errorMessage,
+  }) {
+    if (value == null || value.isEmpty) return errorMessage;
+    if (value.length < minLength) return errorMessage;
     return null;
   }
 
-  static String? confirmPassword(String? value, String? password) {
-    if (value == null || value.isEmpty) {
-      return 'Şifreyi doğrulayın';
-    }
-
-    if (value != password) {
-      return 'Şifreler uyuşmuyor';
-    }
-
+  static String? confirmPassword(
+    String? value,
+    String? password, {
+    required String errorMessage,
+  }) {
+    if (value == null || value.isEmpty) return errorMessage;
+    if (value != password) return errorMessage;
     return null;
   }
 
   // ==================== Required Field Validation ====================
 
-  static String? required(String? value, {String? fieldName}) {
-    if (value == null || value.isEmpty) {
-      return '${fieldName ?? 'Bu alan'} gerekli';
-    }
-
+  static String? required(String? value, {required String errorMessage}) {
+    if (value == null || value.isEmpty) return errorMessage;
     return null;
   }
 
   // ==================== Number Validation ====================
 
-  static String? number(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Sayı gerekli';
-    }
-
-    if (double.tryParse(value) == null) {
-      return 'Geçerli bir sayı girin';
-    }
-
+  static String? number(String? value, {required String errorMessage}) {
+    if (value == null || value.isEmpty) return errorMessage;
+    if (double.tryParse(value) == null) return errorMessage;
     return null;
   }
 
-  static String? positiveNumber(String? value) {
-    final numberError = number(value);
-    if (numberError != null) return numberError;
-
-    final numValue = double.parse(value!);
-    if (numValue <= 0) {
-      return 'Sayı 0\'dan büyük olmalı';
-    }
-
+  static String? positiveNumber(String? value, {required String errorMessage}) {
+    final error = number(value, errorMessage: errorMessage);
+    if (error != null) return error;
+    if (double.parse(value!) <= 0) return errorMessage;
     return null;
   }
 
-  static String? amount(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Tutar gerekli';
-    }
-
-    final amount = double.tryParse(value);
-    if (amount == null) {
-      return 'Geçerli bir tutar girin';
-    }
-
-    if (amount <= 0) {
-      return 'Tutar 0\'dan büyük olmalı';
-    }
-
+  static String? amount(String? value, {required String errorMessage}) {
+    if (value == null || value.isEmpty) return errorMessage;
+    final parsed = double.tryParse(value);
+    if (parsed == null) return errorMessage;
+    if (parsed <= 0) return errorMessage;
     return null;
   }
 
   // ==================== Length Validation ====================
 
-  static String? minLength(String? value, int min, {String? fieldName}) {
-    if (value == null || value.isEmpty) {
-      return '${fieldName ?? 'Bu alan'} gerekli';
-    }
-
-    if (value.length < min) {
-      return '${fieldName ?? 'Bu alan'} en az $min karakter olmalı';
-    }
-
+  static String? minLength(
+    String? value,
+    int min, {
+    required String errorMessage,
+  }) {
+    if (value == null || value.isEmpty) return errorMessage;
+    if (value.length < min) return errorMessage;
     return null;
   }
 
-  static String? maxLength(String? value, int max, {String? fieldName}) {
-    if (value == null || value.isEmpty) {
-      return null;
-    }
-
-    if (value.length > max) {
-      return '${fieldName ?? 'Bu alan'} en fazla $max karakter olabilir';
-    }
-
+  static String? maxLength(
+    String? value,
+    int max, {
+    required String errorMessage,
+  }) {
+    if (value == null || value.isEmpty) return null;
+    if (value.length > max) return errorMessage;
     return null;
   }
 
   static String? lengthRange(
-      String? value,
-      int min,
-      int max, {
-        String? fieldName,
-      }) {
-    if (value == null || value.isEmpty) {
-      return '${fieldName ?? 'Bu alan'} gerekli';
-    }
-
-    if (value.length < min || value.length > max) {
-      return '${fieldName ?? 'Bu alan'} $min ile $max karakter arasında olmalı';
-    }
-
+    String? value,
+    int min,
+    int max, {
+    required String errorMessage,
+  }) {
+    if (value == null || value.isEmpty) return errorMessage;
+    if (value.length < min || value.length > max) return errorMessage;
     return null;
   }
 
   // ==================== Phone Validation ====================
 
-  /// Türk telefon numarası validasyonu
-  /// Format: (5XX) XXX XX XX
-  static String? turkishPhone(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Telefon numarası gerekli';
-    }
-
-    // Sadece rakamları al
-    final digitsOnly = value.replaceAll(RegExp(r'[^\d]'), '');
-
-    // 10 haneli olmalı
-    if (digitsOnly.length != 10) {
-      return 'Telefon numarası 10 haneli olmalı';
-    }
-
-    // 5 ile başlamalı
-    if (!digitsOnly.startsWith('5')) {
-      return 'Telefon numarası 5 ile başlamalı';
-    }
-
-    return null;
-  }
-
-  /// TC Kimlik numarası validasyonu
-  /// 11 haneli, 0 ile başlamayan
-  static String? tcNumber(String? value) {
-    if (value == null || value.isEmpty) {
-      return null; // Opsiyonel alan
-    }
-
-    // Sadece rakamları al
-    final digitsOnly = value.replaceAll(RegExp(r'[^\d]'), '');
-
-    // 11 haneli olmalı
-    if (digitsOnly.length != 11) {
-      return 'TC Kimlik numarası 11 haneli olmalı';
-    }
-
-    // 0 ile başlamamalı
-    if (digitsOnly.startsWith('0')) {
-      return 'TC Kimlik numarası 0 ile başlayamaz';
-    }
-
-    // TC Kimlik numarası algoritması kontrolü
-    if (!_isValidTcNumber(digitsOnly)) {
-      return 'Geçersiz TC Kimlik numarası';
-    }
-
-    return null;
-  }
-
-  /// TC Kimlik numarası algoritma kontrolü
-  static bool _isValidTcNumber(String tc) {
-    if (tc.length != 11) return false;
-
-    final digits = tc.split('').map((e) => int.parse(e)).toList();
-
-    // İlk 10 hanenin toplamının birler basamağı 11. haneye eşit olmalı
-    final sum = digits.sublist(0, 10).reduce((a, b) => a + b);
-    if (sum % 10 != digits[10]) return false;
-
-    // 1, 3, 5, 7, 9. hanelerin toplamının 7 katından
-    // 2, 4, 6, 8. hanelerin toplamını çıkarınca
-    // elde edilen sonucun birler basamağı 10. haneye eşit olmalı
-    final oddSum = digits[0] + digits[2] + digits[4] + digits[6] + digits[8];
-    final evenSum = digits[1] + digits[3] + digits[5] + digits[7];
-    if ((oddSum * 7 - evenSum) % 10 != digits[9]) return false;
-
-    return true;
-  }
-
-  /// Genel telefon validasyonu (eski versiyon - geriye dönük uyumluluk için)
-  static String? phone(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Telefon numarası gerekli';
-    }
-
+  static String? phone(String? value, {required String errorMessage}) {
+    if (value == null || value.isEmpty) return errorMessage;
     final cleaned = value.replaceAll(RegExp(r'[\s\-\(\)]'), '');
-
-    if (!RegExp(r'^\+?\d{10,15}$').hasMatch(cleaned)) {
-      return 'Geçerli bir telefon numarası girin';
-    }
-
+    if (!RegExp(r'^\+?\d{10,15}$').hasMatch(cleaned)) return errorMessage;
     return null;
   }
 
   // ==================== URL Validation ====================
 
-  static String? url(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'URL gerekli';
-    }
+  static String? url(String? value, {required String errorMessage}) {
+    if (value == null || value.isEmpty) return errorMessage;
 
     final urlRegex = RegExp(
       r'^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)$',
     );
 
-    if (!urlRegex.hasMatch(value)) {
-      return 'Geçerli bir URL girin';
-    }
-
+    if (!urlRegex.hasMatch(value)) return errorMessage;
     return null;
   }
 
   // ==================== Date Validation ====================
 
-  static String? date(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Tarih gerekli';
-    }
-
+  static String? date(String? value, {required String errorMessage}) {
+    if (value == null || value.isEmpty) return errorMessage;
     try {
       DateTime.parse(value);
       return null;
     } catch (e) {
-      return 'Geçerli bir tarih girin';
+      return errorMessage;
     }
   }
 
-  static String? futureDate(String? value) {
-    final dateError = date(value);
-    if (dateError != null) return dateError;
-
-    final parsedDate = DateTime.parse(value!);
-    if (parsedDate.isBefore(DateTime.now())) {
-      return 'Tarih gelecekte olmalı';
-    }
-
+  static String? futureDate(String? value, {required String errorMessage}) {
+    final error = date(value, errorMessage: errorMessage);
+    if (error != null) return error;
+    if (DateTime.parse(value!).isBefore(DateTime.now())) return errorMessage;
     return null;
   }
 
-  static String? pastDate(String? value) {
-    final dateError = date(value);
-    if (dateError != null) return dateError;
-
-    final parsedDate = DateTime.parse(value!);
-    if (parsedDate.isAfter(DateTime.now())) {
-      return 'Tarih geçmişte olmalı';
-    }
-
+  static String? pastDate(String? value, {required String errorMessage}) {
+    final error = date(value, errorMessage: errorMessage);
+    if (error != null) return error;
+    if (DateTime.parse(value!).isAfter(DateTime.now())) return errorMessage;
     return null;
   }
 
   // ==================== Custom Validation ====================
 
   static String? custom(
-      String? value,
-      bool Function(String) validator,
-      String errorMessage,
-      ) {
-    if (value == null || value.isEmpty) {
-      return errorMessage;
-    }
-
-    if (!validator(value)) {
-      return errorMessage;
-    }
-
+    String? value,
+    bool Function(String) validator,
+    String errorMessage,
+  ) {
+    if (value == null || value.isEmpty) return errorMessage;
+    if (!validator(value)) return errorMessage;
     return null;
   }
 
   // ==================== Compose Multiple Validators ====================
 
   static String? Function(String?) compose(
-      List<String? Function(String?)> validators,
-      ) {
+    List<String? Function(String?)> validators,
+  ) {
     return (String? value) {
       for (final validator in validators) {
         final error = validator(value);

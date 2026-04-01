@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'app_colors.dart';
 
 final class AppTypography {
   AppTypography._();
@@ -12,21 +11,18 @@ final class AppTypography {
     fontSize: 57,
     fontFamily: fontFamily,
     fontWeight: FontWeight.w400,
-    color: AppColors.textPrimaryLight,
   );
 
   static const TextStyle displayMd = TextStyle(
     fontSize: 45,
     fontFamily: fontFamily,
     fontWeight: FontWeight.w400,
-    color: AppColors.textPrimaryLight,
   );
 
   static const TextStyle displaySm = TextStyle(
     fontSize: 36,
     fontFamily: fontFamily,
     fontWeight: FontWeight.w400,
-    color: AppColors.textPrimaryLight,
   );
 
   // HEADLINE
@@ -34,21 +30,18 @@ final class AppTypography {
     fontSize: 32,
     fontFamily: fontFamily,
     fontWeight: FontWeight.w600,
-    color: AppColors.textPrimaryLight,
   );
 
   static const TextStyle headlineMd = TextStyle(
     fontSize: 28,
     fontFamily: fontFamily,
     fontWeight: FontWeight.w600,
-    color: AppColors.textPrimaryLight,
   );
 
   static const TextStyle headlineSm = TextStyle(
     fontSize: 24,
     fontFamily: fontFamily,
     fontWeight: FontWeight.w600,
-    color: AppColors.textPrimaryLight,
   );
 
   // TITLE
@@ -56,21 +49,18 @@ final class AppTypography {
     fontSize: 22,
     fontFamily: fontFamily,
     fontWeight: FontWeight.w600,
-    color: AppColors.textPrimaryLight,
   );
 
   static const TextStyle titleMd = TextStyle(
     fontSize: 16,
     fontFamily: fontFamily,
     fontWeight: FontWeight.w600,
-    color: AppColors.textPrimaryLight,
   );
 
   static const TextStyle titleSm = TextStyle(
     fontSize: 14,
     fontFamily: fontFamily,
     fontWeight: FontWeight.w500,
-    color: AppColors.textPrimaryLight,
   );
 
   // BODY
@@ -78,21 +68,18 @@ final class AppTypography {
     fontSize: 16,
     fontFamily: fontFamily,
     fontWeight: FontWeight.w400,
-    color: AppColors.textPrimaryLight,
   );
 
   static const TextStyle bodyMd = TextStyle(
     fontSize: 14,
     fontFamily: fontFamily,
     fontWeight: FontWeight.w400,
-    color: AppColors.textPrimaryLight,
   );
 
   static const TextStyle bodySm = TextStyle(
     fontSize: 12,
     fontFamily: fontFamily,
     fontWeight: FontWeight.w400,
-    color: AppColors.textPrimaryLight,
   );
 
   // LABEL
@@ -100,20 +87,17 @@ final class AppTypography {
     fontSize: 14,
     fontFamily: fontFamily,
     fontWeight: FontWeight.w500,
-    color: AppColors.textPrimaryLight,
   );
 
   static const TextStyle labelMd = TextStyle(
     fontSize: 12,
     fontFamily: fontFamily,
     fontWeight: FontWeight.w500,
-    color: AppColors.textPrimaryLight,
   );
 
   static const TextStyle labelSm = TextStyle(
     fontSize: 11,
     fontFamily: fontFamily,
     fontWeight: FontWeight.w500,
-    color: AppColors.textPrimaryLight,
   );
 }

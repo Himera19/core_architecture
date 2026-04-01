@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:core_architecture/core_architecture.dart';
+
+import '../ui/tokens/app_radius.dart';
 
 final class RadiusUtils {
   RadiusUtils._();
@@ -20,8 +21,8 @@ final class RadiusUtils {
       );
 
   static BorderRadius get topMd =>
-      BorderRadius.vertical(top: Radius.circular(AppRadius.md));
+      const BorderRadius.vertical(top: Radius.circular(AppRadius.md));
 
   static BorderRadius get bottomMd =>
-      BorderRadius.vertical(bottom: Radius.circular(AppRadius.md));
+      const BorderRadius.vertical(bottom: Radius.circular(AppRadius.md));
 }

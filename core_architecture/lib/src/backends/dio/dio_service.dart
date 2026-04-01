@@ -3,6 +3,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
+import '../../core/constants/storage_constants.dart';
 import '../../core/errors/exceptions.dart';
 import '../../core/errors/failures.dart';
 import '../../core/logging/logger_service.dart';
@@ -125,7 +126,7 @@ final class DioService {
     return InterceptorsWrapper(
       onRequest: (options, handler) async {
         // Get access token from storage
-        final token = await _storage.read(key: 'access_token');
+        final token = await _storage.read(key: StorageConstants.accessToken);
 
         if (token != null) {
           options.headers['Authorization'] = 'Bearer $token';
@@ -137,7 +138,7 @@ final class DioService {
         // Handle 401 Unauthorized - try to refresh token
         if (error.response?.statusCode == 401) {
           try {
-            final refreshToken = await _storage.read(key: 'refresh_token');
+            final refreshToken = await _storage.read(key: StorageConstants.refreshToken);
 
             if (refreshToken != null) {
               // Attempt to refresh the token
@@ -211,7 +212,7 @@ final class DioService {
         }
 
       case DioExceptionType.cancel:
-        return NetworkFailure(message: 'Request cancelled');
+        return const NetworkFailure(message: 'Request cancelled');
 
       case DioExceptionType.connectionError:
         return NetworkFailure(
@@ -239,17 +240,17 @@ final class DioService {
       final newRefreshToken = response.data['refresh_token'] as String?;
 
       if (newAccessToken != null) {
-        await _storage.write(key: 'access_token', value: newAccessToken);
+        await _storage.write(key: StorageConstants.accessToken, value: newAccessToken);
       }
       if (newRefreshToken != null) {
-        await _storage.write(key: 'refresh_token', value: newRefreshToken);
+        await _storage.write(key: StorageConstants.refreshToken, value: newRefreshToken);
       }
 
       return newAccessToken;
     } catch (e) {
       _logger.e('Token refresh failed', error: e, tag: 'Dio');
-      await _storage.delete(key: 'access_token');
-      await _storage.delete(key: 'refresh_token');
+      await _storage.delete(key: StorageConstants.accessToken);
+      await _storage.delete(key: StorageConstants.refreshToken);
       return null;
     }
   }

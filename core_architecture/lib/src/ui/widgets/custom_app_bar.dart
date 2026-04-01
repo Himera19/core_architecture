@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:core_architecture/core_architecture.dart';
+import 'package:go_router/go_router.dart';
+
+import '../tokens/app_colors.dart';
+import '../../utils/extensions/context_extensions.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String? title;

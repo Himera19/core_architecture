@@ -412,9 +412,11 @@ class SupabaseCrudClient implements CrudContract {
     try {
       _logger.d('Upserting in: $table', tag: 'SupabaseCRUD');
 
-      var query = _supabase.client.from(table).upsert(data);
-
-      final response = await query.select().single();
+      final response = await _supabase.client
+          .from(table)
+          .upsert(data, onConflict: onConflict)
+          .select()
+          .single();
       final result = fromJson(response);
 
       _logger.d('Upsert successful', tag: 'SupabaseCRUD');
@@ -451,9 +453,10 @@ class SupabaseCrudClient implements CrudContract {
         tag: 'SupabaseCRUD',
       );
 
-      var query = _supabase.client.from(table).upsert(data);
-
-      final response = await query.select();
+      final response = await _supabase.client
+          .from(table)
+          .upsert(data, onConflict: onConflict)
+          .select();
       final results = (response as List)
           .map((item) => fromJson(item as Map<String, dynamic>))
           .toList();
@@ -488,7 +491,7 @@ class SupabaseCrudClient implements CrudContract {
     Map<String, dynamic>? filter,
   }) async {
     try {
-      var query = _supabase.client.from(table).select();
+      dynamic query = _supabase.client.from(table).count();
 
       if (filter != null && filter.isNotEmpty) {
         for (final entry in filter.entries) {
@@ -496,24 +499,24 @@ class SupabaseCrudClient implements CrudContract {
         }
       }
 
-      final response = await query;
-      return response.length;
+      return await query as int;
     } catch (e) {
       throw DatabaseFailure(message: e.toString());
     }
   }
 
   @override
-  Future<void> rpc({
+  Future<dynamic> rpc({
     required String functionName,
     Map<String, dynamic>? params,
   }) async {
     try {
       _logger.d('Calling RPC: $functionName', tag: 'SupabaseCRUD');
 
-      await _supabase.client.rpc(functionName, params: params);
+      final result = await _supabase.client.rpc(functionName, params: params);
 
       _logger.d('RPC successful', tag: 'SupabaseCRUD');
+      return result;
     } on PostgrestException catch (e, st) {
       _logger.e(
         'RPC failed. Function: $functionName',

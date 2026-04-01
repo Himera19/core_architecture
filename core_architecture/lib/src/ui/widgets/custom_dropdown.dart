@@ -1,21 +1,27 @@
-import 'package:core_architecture/core_architecture.dart';
 import 'package:flutter/material.dart';
+
+import '../tokens/app_borders.dart';
+import '../tokens/app_radius.dart';
+import '../tokens/app_sizes.dart';
+import '../tokens/app_spacings.dart';
+import '../../utils/extensions/context_extensions.dart';
+import '../../utils/gap_utils.dart';
+import '../../utils/spacing_utils.dart';
+import 'custom_button.dart';
 
 class CustomDropdownConstants {
   static const IconData dropdown = Icons.arrow_drop_down;
   static const IconData search = Icons.search;
   static const IconData clear = Icons.clear;
-
-  static const String hintSelect = "Seçiniz";
-  static const String hintSearch = "Ara...";
-  static const String emptyText = "Sonuç bulunamadı";
 }
 
 enum CustomDropdownType { normal, searchable, multiSelect }
 
 class CustomDropdown<T> extends StatefulWidget {
   final String label;
-  final String? hint;
+  final String hintText;
+  final String searchHint;
+  final String noResultsText;
   final T? value;
   final List<T> items;
   final String Function(T) itemLabel;
@@ -24,21 +30,21 @@ class CustomDropdown<T> extends StatefulWidget {
   final String? Function(T?)? validator;
   final bool enabled;
   final IconData? icon;
-  final String? emptyTitle;
 
   const CustomDropdown({
     super.key,
     required this.label,
+    required this.hintText,
+    required this.searchHint,
+    required this.noResultsText,
     required this.items,
     required this.itemLabel,
-    this.hint,
     this.value,
     this.onChanged,
     this.type = CustomDropdownType.normal,
     this.validator,
     this.enabled = true,
     this.icon,
-    this.emptyTitle,
   });
 
   @override
@@ -95,7 +101,8 @@ class _CustomDropdownState<T> extends State<CustomDropdown<T>> {
           widget.onChanged?.call(value);
         },
         colorScheme: colors,
-        emptyTitle: widget.emptyTitle,
+        searchHint: widget.searchHint,
+        noResultsText: widget.noResultsText,
       ),
     );
   }
@@ -119,8 +126,8 @@ class _CustomDropdownState<T> extends State<CustomDropdown<T>> {
               borderRadius: BorderRadius.circular(AppRadius.md),
               child: InputDecorator(
                 decoration: InputDecoration(
-                  labelText: widget.hint ?? CustomDropdownConstants.hintSelect,
-                  hintText: widget.hint ?? CustomDropdownConstants.hintSelect,
+                  labelText: widget.hintText,
+                  hintText: widget.hintText,
                   prefixIcon: widget.icon == null
                       ? null
                       : Icon(
@@ -145,7 +152,6 @@ class _CustomDropdownState<T> extends State<CustomDropdown<T>> {
                     borderRadius: BorderRadius.circular(AppRadius.md),
                     borderSide: BorderSide(
                       color: colors.outlineVariant,
-                      width: AppBorders.thin,
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
@@ -187,7 +193,8 @@ class _DropdownBottomSheet<T> extends StatefulWidget {
   final CustomDropdownType type;
   final void Function(T?) onChanged;
   final ColorScheme colorScheme;
-  final String? emptyTitle;
+  final String searchHint;
+  final String noResultsText;
 
   const _DropdownBottomSheet({
     required this.items,
@@ -196,7 +203,8 @@ class _DropdownBottomSheet<T> extends StatefulWidget {
     required this.type,
     required this.onChanged,
     required this.colorScheme,
-    required this.emptyTitle,
+    required this.searchHint,
+    required this.noResultsText,
   });
 
   @override
@@ -233,7 +241,7 @@ class _DropdownBottomSheetState<T> extends State<_DropdownBottomSheet<T>> {
     return Container(
       decoration: BoxDecoration(
         color: colors.surface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -261,7 +269,7 @@ class _DropdownBottomSheetState<T> extends State<_DropdownBottomSheet<T>> {
                   });
                 },
                 decoration: InputDecoration(
-                  hintText: CustomDropdownConstants.hintSearch,
+                  hintText: widget.searchHint,
                   hintStyle: textTheme.bodyMedium?.copyWith(
                     color: colors.onSurfaceVariant.withValues(alpha: 0.6),
                   ),
@@ -295,7 +303,6 @@ class _DropdownBottomSheetState<T> extends State<_DropdownBottomSheet<T>> {
                     borderRadius: BorderRadius.circular(AppRadius.md),
                     borderSide: BorderSide(
                       color: colors.outlineVariant,
-                      width: AppBorders.thin,
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
@@ -321,7 +328,7 @@ class _DropdownBottomSheetState<T> extends State<_DropdownBottomSheet<T>> {
                     child: Padding(
                       padding: SpacingUtils.all(AppSpacings.wLg),
                       child: Text(
-                        widget.emptyTitle ?? CustomDropdownConstants.emptyText,
+                        widget.noResultsText,
                         style: textTheme.bodyMedium?.copyWith(
                           color: colors.onSurfaceVariant,
                         ),
@@ -385,7 +392,11 @@ class _DropdownBottomSheetState<T> extends State<_DropdownBottomSheet<T>> {
 
 class CustomMultiSelectDropdown<T> extends StatefulWidget {
   final String label;
-  final String? hint;
+  final String hintText;
+  final String selectedCountSuffix;
+  final String clearLabel;
+  final String confirmLabel;
+  final String maxSelectionMessage;
   final List<T> items;
   final String Function(T) itemLabel;
   final List<T> initialValues;
@@ -398,9 +409,13 @@ class CustomMultiSelectDropdown<T> extends StatefulWidget {
   const CustomMultiSelectDropdown({
     super.key,
     required this.label,
+    required this.hintText,
+    required this.selectedCountSuffix,
+    required this.clearLabel,
+    required this.confirmLabel,
+    required this.maxSelectionMessage,
     required this.items,
     required this.itemLabel,
-    this.hint,
     this.initialValues = const [],
     this.onChanged,
     this.validator,
@@ -443,18 +458,20 @@ class _CustomMultiSelectDropdownState<T>
         },
         colorScheme: colors,
         maxSelections: widget.maxSelections,
+        selectedCountSuffix: widget.selectedCountSuffix,
+        clearLabel: widget.clearLabel,
+        confirmLabel: widget.confirmLabel,
+        maxSelectionMessage: widget.maxSelectionMessage,
       ),
     );
   }
 
   String get _displayText {
-    if (_selectedValues.isEmpty) {
-      return widget.hint ?? CustomDropdownConstants.hintSelect;
-    }
+    if (_selectedValues.isEmpty) return widget.hintText;
     if (_selectedValues.length == 1) {
       return widget.itemLabel(_selectedValues.first);
     }
-    return '${_selectedValues.length} seçildi';
+    return '${_selectedValues.length} ${widget.selectedCountSuffix}';
   }
 
   @override
@@ -470,8 +487,8 @@ class _CustomMultiSelectDropdownState<T>
           children: [
             InputDecorator(
               decoration: InputDecoration(
-                labelText: widget.hint ?? CustomDropdownConstants.hintSelect,
-                hintText: widget.hint ?? CustomDropdownConstants.hintSelect,
+                labelText: widget.hintText,
+                hintText: widget.hintText,
                 hintStyle: textTheme.bodyMedium?.copyWith(
                   color: colors.onSurfaceVariant.withValues(alpha: 0.6),
                 ),
@@ -499,7 +516,6 @@ class _CustomMultiSelectDropdownState<T>
                   borderRadius: BorderRadius.circular(AppRadius.md),
                   borderSide: BorderSide(
                     color: colors.outlineVariant,
-                    width: AppBorders.thin,
                   ),
                 ),
                 focusedBorder: OutlineInputBorder(
@@ -513,7 +529,6 @@ class _CustomMultiSelectDropdownState<T>
                   borderRadius: BorderRadius.circular(AppRadius.md),
                   borderSide: BorderSide(
                     color: colors.error,
-                    width: AppBorders.thin,
                   ),
                 ),
                 focusedErrorBorder: OutlineInputBorder(
@@ -556,6 +571,10 @@ class _MultiSelectBottomSheet<T> extends StatefulWidget {
   final void Function(List<T>) onChanged;
   final ColorScheme colorScheme;
   final int? maxSelections;
+  final String selectedCountSuffix;
+  final String clearLabel;
+  final String confirmLabel;
+  final String maxSelectionMessage;
 
   const _MultiSelectBottomSheet({
     required this.items,
@@ -563,6 +582,10 @@ class _MultiSelectBottomSheet<T> extends StatefulWidget {
     required this.selectedValues,
     required this.onChanged,
     required this.colorScheme,
+    required this.selectedCountSuffix,
+    required this.clearLabel,
+    required this.confirmLabel,
+    required this.maxSelectionMessage,
     this.maxSelections,
   });
 
@@ -590,9 +613,7 @@ class _MultiSelectBottomSheetState<T>
             _tempSelected.length >= widget.maxSelections!) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(
-                'Maksimum ${widget.maxSelections} seçim yapabilirsiniz',
-              ),
+              content: Text(widget.maxSelectionMessage),
               behavior: SnackBarBehavior.floating,
             ),
           );
@@ -611,7 +632,7 @@ class _MultiSelectBottomSheetState<T>
     return Container(
       decoration: BoxDecoration(
         color: colors.surface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -634,7 +655,7 @@ class _MultiSelectBottomSheetState<T>
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  '${_tempSelected.length} seçildi',
+                  '${_tempSelected.length} ${widget.selectedCountSuffix}',
                   style: textTheme.titleMedium,
                 ),
                 if (_tempSelected.isNotEmpty)
@@ -644,7 +665,7 @@ class _MultiSelectBottomSheetState<T>
                         _tempSelected.clear();
                       });
                     },
-                    child: Text('Temizle'),
+                    child: Text(widget.clearLabel),
                   ),
               ],
             ),
@@ -693,7 +714,7 @@ class _MultiSelectBottomSheetState<T>
           Padding(
             padding: SpacingUtils.all(AppSpacings.wMd),
             child: CustomButton(
-              text: 'Tamam',
+              text: widget.confirmLabel,
               onPressed: () {
                 widget.onChanged(_tempSelected);
                 Navigator.pop(context);

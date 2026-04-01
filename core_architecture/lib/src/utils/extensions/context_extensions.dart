@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:core_architecture/core_architecture.dart' show AppTypography;
+
+import '../../ui/tokens/app_colors.dart';
+import '../../ui/tokens/app_typography.dart';
 
 extension ContextExtensions on BuildContext {
   ThemeData get theme => Theme.of(this);
@@ -11,9 +13,9 @@ extension ContextExtensions on BuildContext {
       SnackBar(
         content: Text(
           message,
-          style: TextStyle(fontFamily: AppTypography.fontFamily),
+          style: const TextStyle(fontFamily: AppTypography.fontFamily),
         ),
-        backgroundColor: Colors.green,
+        backgroundColor: AppColors.success,
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -24,7 +26,7 @@ extension ContextExtensions on BuildContext {
       SnackBar(
         content: Text(
           message,
-          style: TextStyle(fontFamily: AppTypography.fontFamily),
+          style: const TextStyle(fontFamily: AppTypography.fontFamily),
         ),
         backgroundColor: colorScheme.error,
         behavior: SnackBarBehavior.floating,
@@ -37,7 +39,7 @@ extension ContextExtensions on BuildContext {
       SnackBar(
         content: Text(
           message,
-          style: TextStyle(fontFamily: AppTypography.fontFamily),
+          style: const TextStyle(fontFamily: AppTypography.fontFamily),
         ),
         behavior: SnackBarBehavior.floating,
       ),

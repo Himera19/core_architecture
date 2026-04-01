@@ -1,12 +1,15 @@
-import 'package:core_architecture/core_architecture.dart';
-import 'package:core_architecture/supabase.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+import '../core/constants/storage_constants.dart';
+import '../core/core_providers.dart';
+import '../core/logging/logger_service.dart';
+import '../services/storage_service.dart';
 
 part 'onboarding_provider.g.dart';
 
 @Riverpod(keepAlive: true)
 class OnboardingState extends _$OnboardingState {
-  static const String _storageKey = 'onboarding_seen';
+  static const String _storageKey = StorageConstants.onboardingSeen;
   late final StorageService _storage;
   late final LoggerService _logger;
 

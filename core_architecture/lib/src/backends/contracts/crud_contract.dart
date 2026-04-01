@@ -182,7 +182,7 @@ abstract class CrudContract {
   ///
   /// [functionName] - Name of the function to call
   /// [params] - Parameters to pass to the function
-  Future<void> rpc({
+  Future<dynamic> rpc({
     required String functionName,
     Map<String, dynamic>? params,
   });

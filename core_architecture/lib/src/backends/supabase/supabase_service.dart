@@ -7,6 +7,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart'
     hide AuthException, StorageException;
 
+import '../../core/constants/storage_constants.dart';
 import '../../core/errors/exceptions.dart';
 import '../../core/errors/failures.dart';
 import '../../core/logging/logger_service.dart';
@@ -19,18 +20,23 @@ final class SupabaseService {
   SupabaseService._internal({
     required LoggerService logger,
     required StorageService storage,
+    required String deleteUserRpcName,
     SupabaseClient? client,
   })  : _logger = logger,
         _storage = storage,
+        _deleteUserRpcName = deleteUserRpcName,
         _client = client ?? Supabase.instance.client;
 
   static SupabaseService? _instance;
   final LoggerService _logger;
   final StorageService _storage;
   final SupabaseClient _client;
+  final String _deleteUserRpcName;
 
   /// Initialize Supabase from .env
-  static Future<void> initialize() async {
+  static Future<void> initialize({
+    String deleteUserRpcName = 'delete_user',
+  }) async {
     final url = dotenv.env['SUPABASE_URL'];
     final anonKey = dotenv.env['SUPABASE_ANON_KEY'];
 
@@ -45,6 +51,7 @@ final class SupabaseService {
     _instance = SupabaseService._internal(
       logger: LoggerService(),
       storage: SecureStorageService(),
+      deleteUserRpcName: deleteUserRpcName,
     );
 
     _instance!._logger.i(
@@ -84,18 +91,7 @@ final class SupabaseService {
       );
 
       if (response.user == null) {
-        throw AuthFailure(message: 'No user returned after sign-in');
-      }
-
-      // Save tokens
-      final accessToken = response.session?.accessToken;
-      final refreshToken = response.session?.refreshToken;
-
-      if (accessToken != null) {
-        await _storage.write(key: 'access_token', value: accessToken);
-      }
-      if (refreshToken != null) {
-        await _storage.write(key: 'refresh_token', value: refreshToken);
+        throw const AuthFailure(message: 'No user returned after sign-in');
       }
 
       // Allow projects to save additional user data
@@ -131,7 +127,7 @@ final class SupabaseService {
       );
 
       if (response.user == null) {
-        throw AuthFailure(message: 'No user returned after sign-up');
+        throw const AuthFailure(message: 'No user returned after sign-up');
       }
 
       _logger.i('Sign-up successful. UserID: ${response.user!.id}', tag: 'SupabaseAuth');
@@ -155,8 +151,8 @@ final class SupabaseService {
       _logger.d('Signing out user', tag: 'SupabaseAuth');
 
       await _client.auth.signOut();
-      await _storage.delete(key: 'access_token');
-      await _storage.delete(key: 'refresh_token');
+      await _storage.delete(key: StorageConstants.accessToken);
+      await _storage.delete(key: StorageConstants.refreshToken);
 
       // Allow projects to clear additional user data
       if (onClearUserData != null) {
@@ -189,11 +185,11 @@ final class SupabaseService {
       }
 
       // Delete the user account from Supabase Auth
-      await _client.rpc('delete_user');
+      await _client.rpc(_deleteUserRpcName);
 
       // Clear stored tokens
-      await _storage.delete(key: 'access_token');
-      await _storage.delete(key: 'refresh_token');
+      await _storage.delete(key: StorageConstants.accessToken);
+      await _storage.delete(key: StorageConstants.refreshToken);
 
       _logger.i('Account deletion successful', tag: 'SupabaseAuth');
     } on AuthException catch (e, st) {
@@ -222,7 +218,7 @@ final class SupabaseService {
       );
 
       if (response.user == null) {
-        throw AuthFailure(message: 'OTP verification failed');
+        throw const AuthFailure(message: 'OTP verification failed');
       }
 
       // 2. Update password

@@ -38,36 +38,6 @@ Stream<AuthState> authStateStream(Ref ref) {
   return supabase.client.auth.onAuthStateChange;
 }
 
-/// Helper function to format Supabase auth errors
-String formatAuthError(Object error) {
-  // Fallback to string matching for other error types
-  final errorMessage = error.toString().toLowerCase();
-
-  if (errorMessage.contains('invalid login credentials') ||
-      errorMessage.contains('invalid_credentials')) {
-    return 'Giriş bilgileri yanlış';
-  } else if (errorMessage.contains('email not confirmed')) {
-    return 'E-posta adresi doğrulanmamış';
-  } else if (errorMessage.contains('user already registered')) {
-    return 'Bu e-posta adresi zaten kayıtlı';
-  } else if (errorMessage.contains('invalid email')) {
-    return 'Geçersiz e-posta adresi';
-  } else if (errorMessage.contains('password') &&
-      errorMessage.contains('short')) {
-    return 'Şifre çok kısa';
-  } else if (errorMessage.contains('network')) {
-    return 'İnternet bağlantısı hatası';
-  } else if (errorMessage.contains('rate limit')) {
-    return 'Çok fazla deneme yapıldı, lütfen bekleyin';
-  } else if (errorMessage.contains('same_password')) {
-    return 'Yeni şifreniz eski şifrenizle aynı olamaz.';
-  } else if (errorMessage.contains('otp_expired')) {
-    return 'Doğrulama kodu geçersiz veya daha önce kullanılmış. Lütfen yeni bir kod isteyin.';
-  }
-
-  return 'Bir hata oluştu';
-}
-
 /// Auth provider
 ///
 /// Returns the currently authenticated Supabase User or null
@@ -84,7 +54,7 @@ class SupabaseAuth extends _$SupabaseAuth {
           state = authState.session?.user;
         },
         loading: () {},
-        error: (_, __) {},
+        error: (_, _) {},
       );
     });
 
@@ -101,7 +71,7 @@ class SupabaseAuth extends _$SupabaseAuth {
       );
       state = user;
     } catch (e) {
-      throw formatAuthError(e);
+      rethrow;
     }
   }
 
@@ -123,7 +93,7 @@ class SupabaseAuth extends _$SupabaseAuth {
 
       return user;
     } catch (e) {
-      throw formatAuthError(e);
+      rethrow;
     }
   }
 
@@ -134,7 +104,7 @@ class SupabaseAuth extends _$SupabaseAuth {
       await supabase.signOut();
       state = null;
     } catch (e) {
-      throw formatAuthError(e);
+      rethrow;
     }
   }
 
@@ -144,7 +114,7 @@ class SupabaseAuth extends _$SupabaseAuth {
       final supabase = ref.read(supabaseServiceProvider);
       await supabase.client.auth.resetPasswordForEmail(email);
     } catch (e) {
-      throw formatAuthError(e);
+      rethrow;
     }
   }
 
@@ -157,7 +127,7 @@ class SupabaseAuth extends _$SupabaseAuth {
       );
       state = response.user;
     } catch (e) {
-      throw formatAuthError(e);
+      rethrow;
     }
   }
 
@@ -169,7 +139,7 @@ class SupabaseAuth extends _$SupabaseAuth {
       await supabase.deleteAccount();
       state = null;
     } catch (e) {
-      throw formatAuthError(e);
+      rethrow;
     }
   }
 
@@ -187,7 +157,7 @@ class SupabaseAuth extends _$SupabaseAuth {
         newPassword: newPassword,
       );
     } catch (e) {
-      throw formatAuthError(e);
+      rethrow;
     }
   }
 }

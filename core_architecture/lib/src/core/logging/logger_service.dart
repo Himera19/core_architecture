@@ -10,10 +10,7 @@ final class LoggerService {
         filter: _ProductionFilter(),
         printer: PrettyPrinter(
           methodCount: 0,
-          errorMethodCount: 8,
           lineLength: 100,
-          colors: true,
-          printEmojis: true,
           dateTimeFormat: DateTimeFormat.onlyTimeAndSinceStart,
         ),
       );
@@ -50,7 +47,7 @@ final class LoggerService {
   );
 
   /// Fatal log
-  void wtf(String message, {String? tag}) =>
+  void fatal(String message, {String? tag}) =>
       _logger.f(_formatMessage(message, tag));
 
   // ==================== Utility Methods ====================

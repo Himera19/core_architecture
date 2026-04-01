@@ -1,6 +1,13 @@
-import 'package:core_architecture/core_architecture.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
+import '../tokens/app_borders.dart';
+import '../tokens/app_radius.dart';
+import '../tokens/app_sizes.dart';
+import '../tokens/app_spacings.dart';
+import '../tokens/app_typography.dart';
+import '../../utils/extensions/context_extensions.dart';
+import '../../utils/spacing_utils.dart';
 
 class CustomTextField extends StatefulWidget {
   final TextEditingController? controller;
@@ -97,7 +104,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
       ),
       decoration: InputDecoration(
         labelText: widget.label,
-        labelStyle: TextStyle(fontFamily: AppTypography.fontFamily),
+        labelStyle: const TextStyle(fontFamily: AppTypography.fontFamily),
         hintText: widget.hint,
         hintStyle: textTheme.bodyMedium?.copyWith(
           color: colors.onSurfaceVariant.withValues(alpha: 0.6),
@@ -141,7 +148,6 @@ class _CustomTextFieldState extends State<CustomTextField> {
           borderRadius: BorderRadius.circular(AppRadius.xl),
           borderSide: BorderSide(
             color: colors.outlineVariant,
-            width: AppBorders.thin,
           ),
         ),
         focusedBorder: OutlineInputBorder(
@@ -153,7 +159,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.xl),
-          borderSide: BorderSide(color: colors.error, width: AppBorders.thin),
+          borderSide: BorderSide(color: colors.error),
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.xl),

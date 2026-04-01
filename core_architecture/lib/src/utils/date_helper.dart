@@ -1,18 +1,6 @@
 import 'package:intl/intl.dart';
 
 class DateHelper {
-  // Constants
-  static const String tGoodMorning = 'Günaydın';
-  static const String tGoodAfternoon = 'İyi günler';
-  static const String tGoodEvening = 'İyi akşamlar';
-  static const String tGoodNight = 'İyi geceler';
-
-  static const String tToday = 'Bugün';
-  static const String tYesterday = 'Dün';
-  static const String tTomorrow = 'Yarın';
-  static const String tDaysAgo = 'gün önce';
-  static const String tDaysLater = 'gün sonra';
-
   static const List<String> dayNames = [
     'Pazartesi',
     'Salı',
@@ -60,48 +48,60 @@ class DateHelper {
 
   /// dd.MM.yyyy HH:mm  (TARİH + SAAT)
   static String formatDateTime(DateTime dateTime) =>
-      DateFormat('dd.MM.yyyy HH:mm' ).format(dateTime);
+      DateFormat('dd.MM.yyyy HH:mm').format(dateTime);
 
   // ====================
   // GREETING
   // ====================
 
-  static String getGreeting() {
+  static String getGreeting({
+    required String morning,
+    required String afternoon,
+    required String evening,
+    required String night,
+  }) {
     final int hour = DateTime.now().hour;
 
-    if (hour < 6) return tGoodNight;
-    if (hour < 12) return tGoodMorning;
-    if (hour < 18) return tGoodAfternoon;
-    if (hour < 22) return tGoodEvening;
+    if (hour < 6) return night;
+    if (hour < 12) return morning;
+    if (hour < 18) return afternoon;
+    if (hour < 22) return evening;
 
-    return tGoodNight;
+    return night;
   }
 
   // ====================
   // RELATIVE DATE
   // ====================
 
-  static String getRelativeDate(DateTime date) {
+  static String getRelativeDate(
+    DateTime date, {
+    required String todayLabel,
+    required String yesterdayLabel,
+    required String tomorrowLabel,
+    required String daysAgoSuffix,
+    required String daysLaterSuffix,
+  }) {
     final DateTime now = DateTime.now();
     final Duration diff = now.difference(date);
 
     // Same day
-    if (diff.inDays == 0) return tToday;
+    if (diff.inDays == 0) return todayLabel;
 
     // One day before
-    if (diff.inDays == 1) return tYesterday;
+    if (diff.inDays == 1) return yesterdayLabel;
 
     // One day after
-    if (diff.inDays == -1) return tTomorrow;
+    if (diff.inDays == -1) return tomorrowLabel;
 
     // Within past 7 days
     if (diff.inDays > 1 && diff.inDays < 7) {
-      return '${diff.inDays} $tDaysAgo';
+      return '${diff.inDays} $daysAgoSuffix';
     }
 
     // Within next 7 days
     if (diff.inDays < -1 && diff.inDays > -7) {
-      return '${diff.inDays.abs()} $tDaysLater';
+      return '${diff.inDays.abs()} $daysLaterSuffix';
     }
 
     // Otherwise exact date
@@ -138,7 +138,7 @@ class DateHelper {
   // ====================
 
   static List<DateTime> getDaysInMonth(DateTime date) {
-    final first = DateTime(date.year, date.month, 1);
+    final first = DateTime(date.year, date.month);
     final last = DateTime(date.year, date.month + 1, 0);
 
     return List.generate(last.day, (i) => first.add(Duration(days: i)));

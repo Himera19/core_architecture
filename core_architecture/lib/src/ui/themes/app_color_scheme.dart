@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:core_architecture/core_architecture.dart';
 
-final ColorScheme lightColorScheme = ColorScheme(
+import '../tokens/app_colors.dart';
+
+const ColorScheme lightColorScheme = ColorScheme(
   brightness: Brightness.light,
   primary: AppColors.primary,
   onPrimary: Colors.white,
@@ -15,7 +16,7 @@ final ColorScheme lightColorScheme = ColorScheme(
   outline: AppColors.borderLight,
 );
 
-final ColorScheme darkColorScheme = ColorScheme(
+const ColorScheme darkColorScheme = ColorScheme(
   brightness: Brightness.dark,
   primary: AppColors.primary,
   onPrimary: Colors.white,

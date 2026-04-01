@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 class CurrencyHelper {
   CurrencyHelper._();
 
-  static NumberFormat formatTurkishLira = NumberFormat.currency(
+  static NumberFormat turkishLiraFormat = NumberFormat.currency(
     locale: 'tr_TR',
     symbol: 'TL',
     decimalDigits: 2,

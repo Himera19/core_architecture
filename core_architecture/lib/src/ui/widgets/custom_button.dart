@@ -1,5 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:core_architecture/core_architecture.dart';
+
+import '../tokens/app_borders.dart';
+import '../tokens/app_radius.dart';
+import '../tokens/app_sizes.dart';
+import '../tokens/app_spacings.dart';
+import '../tokens/app_typography.dart';
+import '../../utils/extensions/context_extensions.dart';
+import '../../utils/spacing_utils.dart';
+import '../../utils/spin_kit_indicator.dart';
 
 /// Button visual styles
 enum ButtonType { primary, secondary, outlined, danger }
@@ -90,7 +98,7 @@ class CustomButton extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: AppSizes.iconSm, color: style?.color),
-          SizedBox(width: AppSpacings.wSm),
+          const SizedBox(width: AppSpacings.wSm),
           Text(text, style: style),
         ],
       );

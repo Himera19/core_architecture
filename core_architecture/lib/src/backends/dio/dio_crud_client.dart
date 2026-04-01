@@ -463,16 +463,17 @@ class DioCrudClient implements CrudContract {
   }
 
   @override
-  Future<void> rpc({
+  Future<dynamic> rpc({
     required String functionName,
     Map<String, dynamic>? params,
   }) async {
     try {
       _logger.d('Calling RPC: POST /rpc/$functionName', tag: 'DioCRUD');
 
-      await _dio.post('/rpc/$functionName', data: params);
+      final response = await _dio.post('/rpc/$functionName', data: params);
 
       _logger.d('RPC successful', tag: 'DioCRUD');
+      return response.data;
     } on DioException catch (e) {
       _logger.e(
         'RPC failed: /rpc/$functionName',
