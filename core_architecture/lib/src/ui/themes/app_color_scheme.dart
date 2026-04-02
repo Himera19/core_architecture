@@ -18,10 +18,10 @@ const ColorScheme lightColorScheme = ColorScheme(
 
 const ColorScheme darkColorScheme = ColorScheme(
   brightness: Brightness.dark,
-  primary: AppColors.primary,
-  onPrimary: Colors.white,
-  secondary: AppColors.secondary,
-  onSecondary: AppColors.onSecondary,
+  primary: Color(0xFF60A5FA),    // Blue-400 — lighter for dark bg contrast
+  onPrimary: Color(0xFF1E3A8A),  // Blue-900
+  secondary: Color(0xFF93C5FD),  // Blue-300
+  onSecondary: Color(0xFF1E3A8A),
   error: AppColors.error,
   onError: Colors.white,
   surface: AppColors.surfaceDark,

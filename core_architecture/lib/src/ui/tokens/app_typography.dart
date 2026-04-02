@@ -4,7 +4,7 @@ final class AppTypography {
   AppTypography._();
 
   // MAIN FONT
-  static const String fontFamily = "Rubik";
+  static const String fontFamily = "PlusJakartaSans";
 
   // DISPLAY
   static const TextStyle displayLg = TextStyle(
