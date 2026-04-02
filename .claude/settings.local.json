@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(flutter analyze:*)",
+      "Bash(sed -n '153,160p' /Users/himera19/projects/core_architecture/core_architecture/lib/src/ui/widgets/custom_dropdown.dart)",
+      "Bash(sed -n '240,250p' /Users/himera19/projects/core_architecture/core_architecture/lib/src/ui/widgets/custom_dropdown.dart)",
+      "Bash(sed -n '302,312p' /Users/himera19/projects/core_architecture/core_architecture/lib/src/ui/widgets/custom_dropdown.dart)",
+      "Bash(sed -n '506,530p' /Users/himera19/projects/core_architecture/core_architecture/lib/src/ui/widgets/custom_dropdown.dart)",
+      "Bash(sed -n '618,660p' /Users/himera19/projects/core_architecture/core_architecture/lib/src/ui/widgets/custom_dropdown.dart)",
+      "Bash(sed -n '105,112p' /Users/himera19/projects/core_architecture/core_architecture/lib/src/ui/widgets/custom_text_field.dart)",
+      "Bash(sed -n '148,167p' /Users/himera19/projects/core_architecture/core_architecture/lib/src/ui/widgets/custom_text_field.dart)",
+      "Bash(sed -n '40,48p' /Users/himera19/projects/core_architecture/core_architecture/lib/src/ui/widgets/navbar.dart)",
+      "Bash(sed -n '85,92p' /Users/himera19/projects/core_architecture/core_architecture/lib/src/backends/supabase/supabase_service.dart)",
+      "Bash(sed -n '120,128p' /Users/himera19/projects/core_architecture/core_architecture/lib/src/backends/supabase/supabase_service.dart)",
+      "Bash(sed -n '212,218p' /Users/himera19/projects/core_architecture/core_architecture/lib/src/backends/supabase/supabase_service.dart)",
+      "Bash(flutter pub:*)"
+    ]
+  }
+}

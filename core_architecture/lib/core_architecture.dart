@@ -58,7 +58,6 @@ export 'src/ui/widgets/navbar.dart';
 
 // ==================== Utils ====================
 export 'src/utils/border_utils.dart';
-export 'src/utils/currency_helper.dart';
 export 'src/utils/date_helper.dart';
 export 'src/utils/gap_utils.dart';
 export 'src/utils/input_formatters.dart';
