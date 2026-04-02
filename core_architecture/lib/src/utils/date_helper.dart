@@ -38,7 +38,7 @@ class DateHelper {
     return '${hour.toString().padLeft(2, '0')}:${min.toString().padLeft(2, '0')}';
   }
 
-  /// dd.MM.yyyy  (SADECE TARİH)
+  /// dd.MM.yyyy  (DATE ONLY)
   static String formatDate(DateTime date) =>
       DateFormat('dd.MM.yyyy').format(date);
 
@@ -46,7 +46,7 @@ class DateHelper {
   static String formatTime(DateTime time) =>
       DateFormat('HH:mm').format(time);
 
-  /// dd.MM.yyyy HH:mm  (TARİH + SAAT)
+  /// dd.MM.yyyy HH:mm  (DATE + TIME)
   static String formatDateTime(DateTime dateTime) =>
       DateFormat('dd.MM.yyyy HH:mm').format(dateTime);
 

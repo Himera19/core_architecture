@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-// Not: Bu importlar sizin projenize özel tokenlardır.
-// Hata almamak için kendi projenizdeki yolları kontrol edin.
+// Note: These imports are project-specific tokens.
+// Check the paths in your own project to avoid errors.
 import '../tokens/app_borders.dart';
 import '../tokens/app_radius.dart';
 import '../tokens/app_sizes.dart';
@@ -84,8 +84,8 @@ class _CustomTextFieldState extends State<CustomTextField> {
     final ColorScheme colors = context.colorScheme;
     final TextTheme textTheme = context.textTheme;
 
-    // Web üzerinde hover/error durumunda yazı renginin kaybolmasını engellemek için
-    // stilleri önceden tanımlıyoruz.
+    // To prevent text color from disappearing on hover/error state on Web,
+    // we define styles in advance.
     final TextStyle commonTextStyle = TextStyle(
       fontFamily: AppTypography.fontFamily,
       fontSize: textTheme.bodyLarge?.fontSize,
@@ -106,13 +106,13 @@ class _CustomTextFieldState extends State<CustomTextField> {
       onTap: widget.onTap,
       readOnly: widget.readOnly,
       enabled: widget.enabled,
-      // Ana yazı stili
+      // Main text style
       style: commonTextStyle.copyWith(color: colors.onSurface),
       decoration: InputDecoration(
         labelText: widget.label,
-        // Label normal durumdayken
+        // Label in normal state
         labelStyle: commonTextStyle.copyWith(color: colors.onSurfaceVariant),
-        // Hata varken yukarıdaki label'ın rengi (Web hover sorununu çözer)
+        // Label color when there is an error (fixes Web hover issue)
         floatingLabelStyle: WidgetStateTextStyle.resolveWith((states) {
           if (states.contains(WidgetState.error)) {
             return commonTextStyle.copyWith(color: colors.error);
@@ -127,7 +127,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
           color: colors.onSurfaceVariant.withValues(alpha: 0.6),
           fontFamily: AppTypography.fontFamily,
         ),
-        // Hata mesajı yazı stili
+        // Error message text style
         errorStyle: TextStyle(
           fontFamily: AppTypography.fontFamily,
           color: colors.error,
