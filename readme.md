@@ -621,10 +621,27 @@ static const Color secondary = Color(0xFF7F5599);
 
 ### Typography
 
-Edit `lib/src/ui/tokens/app_typography.dart`:
+This package does not bundle any fonts. Download your preferred font and add it to your app's `assets/fonts/` directory, then register it in your `pubspec.yaml`:
+
+```yaml
+flutter:
+  fonts:
+    - family: YourFontName
+      fonts:
+        - asset: assets/fonts/YourFont-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/YourFont-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/YourFont-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/YourFont-Bold.ttf
+          weight: 700
+```
+
+Then update `lib/src/ui/tokens/app_typography.dart` in your project:
 
 ```dart
-static const String fontFamily = "Rubik";
+static const String fontFamily = "YourFontName";
 ```
 
 > Do not set `color` on typography tokens — styles are theme-aware.
