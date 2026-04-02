@@ -4,41 +4,45 @@ A production-ready, modular Flutter architecture package built on **Riverpod 3**
 
 Drop it into any Flutter project as a local package, keep what you need, delete what you don't.
 
+**Version:** 1.3.1 · **Status:** Active development · **License:** MIT
+
 ---
 
 ## Table of Contents
 
-- [Features](#-features)
-- [Quick Start](#-quick-start)
-- [Architecture Overview](#-architecture-overview)
-- [Backend Selection](#-backend-selection)
-- [Core Layer](#-core-layer)
-- [UI Design System](#-ui-design-system)
-- [Utilities](#-utilities)
-- [Providers](#-providers)
-- [CRUD Operations](#-crud-operations)
-- [Authentication (Supabase)](#-authentication-supabase)
-- [Logging](#-logging)
-- [Adding a New Feature](#-adding-a-new-feature)
-- [Customization Guide](#-customization-guide)
-- [Optional Modules](#-optional-modules)
-- [Troubleshooting](#-troubleshooting)
-- [Quick Reference](#-quick-reference)
+* [Features](#-features)
+* [Quick Start](#-quick-start)
+* [Architecture Overview](#-architecture-overview)
+* [Backend Selection](#-backend-selection)
+* [Core Layer](#-core-layer)
+* [UI Design System](#-ui-design-system)
+* [Utilities](#-utilities)
+* [Providers](#-providers)
+* [CRUD Operations](#-crud-operations)
+* [Authentication (Supabase)](#-authentication-supabase)
+* [Logging](#-logging)
+* [Adding a New Feature](#-adding-a-new-feature)
+* [Customization Guide](#-customization-guide)
+* [Optional Modules](#-optional-modules)
+* [Claude Code Integration](#-claude-code-integration)
+* [Changelog](#-changelog)
+* [Troubleshooting](#-troubleshooting)
+* [Quick Reference](#-quick-reference)
 
 ---
 
 ## ✨ Features
 
 | Category | What's Included |
-|----------|------------------|
+| --- | --- |
 | **State Management** | Riverpod 3 with code generation |
 | **Backend** | Supabase & Dio (REST API) — pick one or both |
 | **UI System** | Design tokens, themes, responsive utilities, reusable widgets |
 | **Error Handling** | Extensible `Failure` / `AppException` hierarchy |
-| **Storage** | Encrypted key-value storage with in-memory caching |
+| **Storage** | Encrypted key-value storage with centralized `StorageConstants` |
 | **Logging** | Production-aware logger with HTTP request/response tracking |
 | **Routing** | GoRouter integration with custom page transitions |
-| **Validation** | Email, phone, password, TC ID, IBAN, credit card, and more |
+| **Validation** | Email, phone, password, IBAN, credit card, and more — consumer-provided messages |
 | **In-App Purchases** | RevenueCat error handling (optional, removable) |
 
 ---
@@ -73,7 +77,7 @@ flutter:
     - .env
 ```
 
-```env
+```bash
 # .env (add to .gitignore!)
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_ANON_KEY=your-anon-key
@@ -86,24 +90,24 @@ API_BASE_URL=https://api.example.com
 
 ```dart
 import 'package:core_architecture/core_architecture.dart';
-// Import the backend you need:
 import 'package:core_architecture/supabase.dart';
 // or: import 'package:core_architecture/dio.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // CoreInitializer now handles backend initialization automatically
   await CoreInitializer.initialize(
-    CoreConfig(appName: 'MyApp', useSupabase: true),
+    CoreConfig(
+      appName: 'MyApp',
+      useSupabase: true,
+      // deleteUserRpcName: 'delete_user', // optional, this is the default
+    ),
   );
 
-  await SupabaseService.initialize();
-  // or: await DioService.initialize();
-
-  runApp(ProviderScope(child: const MyApp()));
+  runApp(const ProviderScope(child: MyApp()));
 }
 
-```dart
 class MyApp extends ConsumerWidget {
   const MyApp({super.key});
 
@@ -137,7 +141,8 @@ lib/
     │   └── supabase/          # Supabase service, CRUD client, providers
     ├── core/
     │   ├── config/            # CoreInitializer, CoreConfig
-    │   ├── entities/          # BaseEntity
+    │   ├── constants/         # StorageConstants and app-wide constants
+    │   ├── entities/          # BaseEntity (id, equality, copyWith, toString)
     │   ├── errors/            # Failure & Exception hierarchy
     │   └── logging/           # LoggerService
     ├── providers/             # Theme & Onboarding state
@@ -151,8 +156,6 @@ lib/
 
 ### Import Strategy
 
-The package provides **three entry points** — import only what you need:
-
 ```dart
 // Core only (no backend specifics)
 import 'package:core_architecture/core_architecture.dart';
@@ -164,11 +167,11 @@ import 'package:core_architecture/supabase.dart';
 import 'package:core_architecture/dio.dart';
 ```
 
+> Do not mix barrel imports. Use `supabase.dart` or `dio.dart` — each re-exports `core_architecture.dart` automatically.
+
 ---
 
 ## 🔌 Backend Selection
-
-This package supports a **"delete what you don't need"** approach:
 
 ### Using Supabase Only
 
@@ -182,45 +185,73 @@ This package supports a **"delete what you don't need"** approach:
 2. Delete `lib/supabase.dart` barrel file
 3. Remove `supabase_flutter` from `pubspec.yaml`
 
-### Using Both
-
-Keep everything as-is. Import from the appropriate barrel file per feature.
-
 ---
 
 ## 🧱 Core Layer
 
 ### CoreInitializer
 
-Bootstraps the application: loads `.env`, initializes Flutter bindings, and validates backend configuration.
+Bootstraps the application and **automatically initializes the selected backend**. No need to call `SupabaseService.initialize()` or `DioService.initialize()` manually.
 
 ```dart
 await CoreInitializer.initialize(
   CoreConfig(
     appName: 'MyApp',
-    useSupabase: true, // or useDio: true, or both
-    envFile: '.env',   // default
+    useSupabase: true,
+    useDio: false,
+    deleteUserRpcName: 'delete_user', // configurable RPC name
   ),
 );
 ```
 
-### Error Handling
+### BaseEntity
 
-Two parallel hierarchies — `Failure` for business logic, `AppException` for thrown exceptions:
+Abstract base for all database entities. Provides:
+- `id` field
+- `==` / `hashCode` equality by id
+- Abstract `copyWith()`
+- `toString()`
 
 ```dart
-// Abstract base — extend for project-specific failures
-abstract class Failure {
-  final String message;
-  final String? code;
-  final dynamic data;
+@JsonSerializable()
+class OrderModel extends BaseEntity {
+  final String title;
+  final double amount;
+
+  const OrderModel({
+    required super.id,
+    required this.title,
+    required this.amount,
+  });
+
+  @override
+  OrderModel copyWith({String? id, String? title, double? amount}) =>
+      OrderModel(
+        id: id ?? this.id,
+        title: title ?? this.title,
+        amount: amount ?? this.amount,
+      );
+
+  factory OrderModel.fromJson(Map<String, dynamic> json) =>
+      _$OrderModelFromJson(json);
+
+  Map<String, dynamic> toJson() => _$OrderModelToJson(this);
 }
+```
+
+### Error Handling
+
+```dart
+// Always use Failure subclasses — never throw raw exceptions
+throw const ServerFailure(message: 'Failed to fetch orders');
+throw const NetworkFailure(message: 'No connection');
+throw const AuthFailure(message: 'Session expired');
 ```
 
 **Built-in failure types:**
 
 | Failure | Use Case |
-|---------|----------|
+| --- | --- |
 | `NetworkFailure` | Connectivity issues |
 | `ServerFailure` | 5xx responses |
 | `TimeoutFailure` | Request timeouts |
@@ -240,16 +271,24 @@ final class PaymentFailure extends Failure {
 }
 ```
 
-### Storage Service
+### Storage Service & StorageConstants
 
-Abstract `StorageService` interface with `SecureStorageService` implementation using `flutter_secure_storage` and an in-memory cache layer:
+All storage keys are centralized in `StorageConstants` — never use magic strings.
+
+```dart
+// ❌ Wrong
+await storage.write(key: 'access_token', value: token);
+
+// ✅ Correct
+await storage.write(key: StorageConstants.accessToken, value: token);
+```
 
 ```dart
 final storage = ref.read(storageServiceProvider);
 
-await storage.write(key: 'token', value: 'abc123');
-final token = await storage.read(key: 'token');
-await storage.delete(key: 'token');
+await storage.write(key: StorageConstants.accessToken, value: 'abc123');
+final token = await storage.read(key: StorageConstants.accessToken);
+await storage.delete(key: StorageConstants.accessToken);
 await storage.clearAll();
 ```
 
@@ -259,43 +298,35 @@ await storage.clearAll();
 
 ### Design Tokens
 
-All visual constants are centralized in `lib/src/ui/tokens/`:
+All visual constants are centralized in `lib/src/ui/tokens/`. **Never use raw values.**
 
 ```dart
-// Colors
-AppColors.primary          // Brand primary
-AppColors.secondary        // Brand secondary
-AppColors.error            // Status: error
-AppColors.success          // Status: success
+// ❌ Wrong
+Container(padding: EdgeInsets.all(16))
+Text('Hello', style: TextStyle(fontSize: 18, color: Colors.black))
+SizedBox(height: 8)
 
-// Typography
-AppTypography.headlineLg   // 32sp, w600
-AppTypography.bodyMd       // 14sp, w400
-AppTypography.labelSm      // 11sp, w500
-
-// Spacings
-AppSpacings.wMd            // 16.0 (width-based)
-AppSpacings.hLg            // 24.0 (height-based)
-AppSpacings.rSm            // 12.0 (radius-based)
-
-// Sizes
-AppSizes.buttonMd          // 48.0
-AppSizes.iconMd            // 24.0
-AppSizes.avatarLg          // 64.0
-
-// Radius
-AppRadius.sm / .md / .lg
-
-// Durations
-AppDurations.fast / .normal / .slow
-
-// Elevations
-AppElevations.sm / .md / .lg
+// ✅ Correct
+Container(padding: SpacingUtils.all(AppSpacings.wMd))
+Text('Hello', style: AppTypography.bodyLg)
+Gap.hSm
 ```
 
-### Themes
+| Token | Location | Note |
+| --- | --- | --- |
+| Colors | `AppColors.*` | |
+| Typography | `AppTypography.*` | No color set — inherits from theme |
+| Spacing | `AppSpacings.*` + `SpacingUtils.*` | |
+| Radius | `AppRadius.*` | |
+| Sizes | `AppSizes.*` | |
+| Durations | `AppDurations.*` | |
+| Elevations | `AppElevations.*` | |
+| Gaps | `Gap.hSm / Gap.wMd` | All `const` |
+| Opacity | `AppOpacities.*` | Alpha values 0–255 |
 
-Ready-to-use `lightTheme` and `darkTheme` with Material 3:
+> **AppTypography** text styles have no color — they inherit from the active theme. Use `copyWith(color: context.colorScheme.primary)` when a specific color is needed.
+
+### Themes
 
 ```dart
 MaterialApp(
@@ -305,36 +336,27 @@ MaterialApp(
 )
 ```
 
-Customize colors in `lib/src/ui/tokens/app_colors.dart` and themes in `lib/src/ui/themes/`.
-
 ### Widgets
 
+All string parameters are **required** — the consumer passes localized strings.
+
 | Widget | Description |
-|--------|-------------|
+| --- | --- |
 | `CustomButton` | Primary/secondary/outlined with icon support |
 | `CustomTextField` | Labeled input with validation and prefix/suffix icons |
-| `CustomDropdown<T>` | Searchable dropdown with filtering |
+| `CustomDropdown<T>` | Searchable dropdown — requires `hintText`, `searchHint`, `noResultsText` |
+| `CustomMultiSelectDropdown<T>` | Multi-select — requires `hintText`, `selectedCountSuffix`, `clearLabel`, `confirmLabel`, `maxSelectionMessage` |
 | `CustomAppBar` | Consistent app bar |
 | `Navbar` | Bottom navigation bar |
 
 ```dart
-CustomButton(
-  text: 'Submit',
-  onPressed: () {},
-  type: ButtonType.primary,
-  icon: Icons.send,
-)
-
-CustomTextField(
-  label: 'Email',
-  validator: Validators.email,
-  prefixIcon: Icons.email,
-)
-
 CustomDropdown<String>(
   label: 'City',
   items: ['Istanbul', 'Ankara'],
   itemLabel: (city) => city,
+  hintText: context.l10n.selectCity,
+  searchHint: context.l10n.search,
+  noResultsText: context.l10n.noResults,
   onChanged: (value) {},
 )
 ```
@@ -346,20 +368,12 @@ CustomDropdown<String>(
 ### Spacing & Layout
 
 ```dart
-// Padding
 Container(padding: SpacingUtils.all(AppSpacings.wMd))
 Container(padding: SpacingUtils.horizontal(AppSpacings.wLg))
 
-// Gaps (for Column/Row children)
 Column(children: [
   Widget1(),
-  Gap.hMd,    // vertical gap
-  Widget2(),
-])
-
-Row(children: [
-  Widget1(),
-  Gap.wSm,    // horizontal gap
+  Gap.hMd,
   Widget2(),
 ])
 ```
@@ -376,26 +390,56 @@ context.showInfo('Note: ...')
 
 ### Validators
 
+All validators require the consumer to provide error messages — the package holds zero strings.
+
 ```dart
-Validators.email(value)
-Validators.password(value, minLength: 8)
-Validators.required(value)
-Validators.turkishPhone(value)
-Validators.tcKimlik(value)
-Validators.iban(value)
-Validators.creditCard(value)
+// ❌ Wrong
+validator: Validators.email,
+
+// ✅ Correct
+validator: (value) => Validators.email(
+  value,
+  errorMessage: context.l10n.invalidEmail,
+),
+```
+
+**Available validators:**
+`email`, `password`, `confirmPassword`, `required`, `number`,
+`positiveNumber`, `amount`, `minLength`, `maxLength`, `lengthRange`,
+`phone`, `url`, `date`, `futureDate`, `pastDate`, `custom`, `compose`
+
+> `turkishPhone`, `turkishLiraFormat` and `tcNumber` were removed in v1.3.1.
+
+### DateHelper
+
+String labels are provided by the consumer — no hardcoded strings in the package.
+
+```dart
+DateHelper.getGreeting(
+  morning: context.l10n.goodMorning,
+  afternoon: context.l10n.goodAfternoon,
+  evening: context.l10n.goodEvening,
+  night: context.l10n.goodNight,
+);
+
+DateHelper.getRelativeDate(
+  date,
+  todayLabel: context.l10n.today,
+  yesterdayLabel: context.l10n.yesterday,
+  tomorrowLabel: context.l10n.tomorrow,
+  daysAgoSuffix: context.l10n.daysAgo,
+  daysLaterSuffix: context.l10n.daysLater,
+);
 ```
 
 ### Other Utilities
 
 | Utility | Description |
-|---------|-------------|
+| --- | --- |
 | `PlatformInfo` | Check current platform (`isWeb`, `isMobile`, `isDesktop`) |
-| `AppBreakpoints`| Material 3 Window Size Classes (`compact`, `medium`, `expanded`, `large`) |
-| `ResponsiveValue`| Adaptive values based on screen size |
-| `ResponsiveBuilder`| UI builder based on breakpoint |
-| `DateHelper` | Date formatting and parsing |
-| `CurrencyHelper` | Currency formatting |
+| `AppBreakpoints` | Material 3 Window Size Classes |
+| `ResponsiveValue` | Adaptive values based on screen size |
+| `ResponsiveBuilder` | UI builder based on breakpoint |
 | `InputFormatters` | TextInputFormatter implementations |
 | `RadiusUtils` | BorderRadius factory methods |
 | `BorderUtils` | Border factory methods |
@@ -408,31 +452,17 @@ Validators.creditCard(value)
 
 ### Theme Provider
 
-Persists theme choice to secure storage:
-
 ```dart
-// Read current theme
 final themeMode = ref.watch(themeProvider);
-
-// Toggle light/dark
 ref.read(themeProvider.notifier).toggleTheme();
-
-// Set specific mode
 ref.read(themeProvider.notifier).setThemeMode(ThemeMode.dark);
 ```
 
 ### Onboarding Provider
 
-Track whether onboarding has been shown:
-
 ```dart
-// Check status
 final seen = await ref.read(onboardingStateProvider.future);
-
-// Mark as complete
 ref.read(onboardingStateProvider.notifier).markAsSeen();
-
-// Reset (for testing)
 ref.read(onboardingStateProvider.notifier).reset();
 ```
 
@@ -440,12 +470,10 @@ ref.read(onboardingStateProvider.notifier).reset();
 
 ## 💾 CRUD Operations
 
-Both backends implement `CrudContract` — a unified interface for data operations:
-
-### Available Operations
+Both backends implement `CrudContract`:
 
 | Method | Description |
-|--------|-------------|
+| --- | --- |
 | `query<T>` | List with filter, sort, pagination |
 | `getById<T>` | Single record by ID |
 | `insert<T>` | Create new record |
@@ -454,19 +482,17 @@ Both backends implement `CrudContract` — a unified interface for data operatio
 | `batchInsert<T>` | Bulk create |
 | `batchUpdate<T>` | Bulk update |
 | `batchDelete` | Bulk delete |
-| `upsert<T>` | Insert or update |
+| `upsert<T>` | Insert or update (onConflict supported) |
 | `batchUpsert<T>` | Bulk upsert |
 | `exists` | Check record existence |
-| `count` | Count records |
-| `rpc` | Remote procedure call |
+| `count` | Server-side count (safe for large tables) |
+| `rpc` | Remote procedure call — returns `Future<dynamic>` |
 
-### Supabase Example
+### Example
 
 ```dart
-import 'package:core_architecture/supabase.dart';
-
 @riverpod
-class Todos extends _$Todos {
+class TodosNotifier extends _$TodosNotifier {
   @override
   Future<List<Todo>> build() async {
     final client = ref.watch(supabaseCrudClientProvider);
@@ -480,119 +506,51 @@ class Todos extends _$Todos {
       limit: 20,
     );
   }
-
-  Future<void> addTodo(Todo todo) async {
-    final client = ref.read(supabaseCrudClientProvider);
-    await client.insert<Todo>(
-      table: 'todos',
-      data: todo.toJson(),
-      fromJson: Todo.fromJson,
-    );
-    ref.invalidateSelf();
-  }
 }
 ```
-
-### Dio (REST API) Example
-
-```dart
-import 'package:core_architecture/dio.dart';
-
-@riverpod
-class Products extends _$Products {
-  @override
-  Future<List<Product>> build() async {
-    final client = ref.watch(dioCrudClientProvider);
-    final logger = ref.read(loggerServiceProvider);
-
-    try {
-      logger.d('Fetching products', tag: 'Products');
-
-      return await client.query<Product>(
-        table: 'products',     // maps to GET /products
-        fromJson: Product.fromJson,
-        filter: {'category': 'electronics'},
-        orderBy: 'created_at',
-        ascending: false,
-        limit: 20,
-      );
-    } catch (e) {
-      logger.e('Failed to fetch products', error: e, tag: 'Products');
-      rethrow;
-    }
-  }
-}
-```
-
-**REST API endpoint mapping:**
-
-| CRUD Method | HTTP Endpoint |
-|-------------|---------------|
-| `query` | `GET /products` |
-| `getById` | `GET /products/:id` |
-| `insert` | `POST /products` |
-| `update` | `PUT /products/:id` |
-| `delete` | `DELETE /products/:id` |
 
 ---
 
 ## 🔐 Authentication (Supabase)
 
+Session persistence is managed by the Supabase SDK — never write auth tokens to storage manually.
+
 ```dart
 final auth = ref.read(supabaseAuthProvider.notifier);
 
-// Sign in
 await auth.signIn(email: 'user@email.com', password: '123456');
-
-// Sign up
-await auth.signUp(
-  email: 'user@email.com',
-  password: '123456',
-  firstName: 'John',
-  lastName: 'Doe',
-);
-
-// Sign out
+await auth.signUp(email: 'user@email.com', password: '123456');
 await auth.signOut();
-
-// Reset password
 await auth.resetPassword('user@email.com');
-
-// Update user metadata
 await auth.updateMetadata({'avatar_url': 'https://...'});
+await auth.deleteAccount(); // RPC name configurable via CoreConfig
+```
 
-// Delete account (irreversible!)
-await auth.deleteAccount();
+Auth errors are rethrown raw — the consumer handles display messages:
 
-// Listen to auth state
-ref.listen(authStateStreamProvider, (prev, next) {
-  next.whenData((authState) {
-    // Handle auth changes
-  });
-});
+```dart
+} catch (e) {
+  final message = _mapAuthError(e); // your own mapping
+  state = AsyncError(message, st);
+}
 ```
 
 ---
 
 ## 📊 Logging
 
-`LoggerService` is a singleton with production-aware filtering. In release mode, only warnings and errors are logged.
-
 ```dart
 final logger = ref.read(loggerServiceProvider);
 
-logger.d('Debug message', tag: 'MyFeature');   // Debug
-logger.i('User logged in', tag: 'Auth');        // Info
-logger.w('Cache miss', tag: 'Cache');           // Warning
-logger.e('API failed', error: e, stackTrace: st, tag: 'API');  // Error
+logger.d('Debug message', tag: 'MyFeature');
+logger.i('User logged in', tag: 'Auth');
+logger.w('Cache miss', tag: 'Cache');
+logger.e('API failed', error: e, stackTrace: st, tag: 'API');
+logger.fatal('Unrecoverable error', error: e, tag: 'Core');
 
-// Mask sensitive data in logs
+// Mask sensitive data
 logger.maskSensitive('sk_live_abc123xyz', visibleStart: 7, visibleEnd: 3);
 // Output: "sk_live*******xyz"
-
-// HTTP logging (used internally by Dio interceptors)
-logger.logRequest(method: 'GET', url: '/api/users');
-logger.logResponse(statusCode: 200, url: '/api/users', data: responseData);
 ```
 
 ---
@@ -606,25 +564,24 @@ lib/features/orders/
 ├── models/
 │   └── order_model.dart
 ├── providers/
-│   └── orders_provider.dart
+│   └── orders_notifier.dart
 ├── pages/
 │   └── orders_page.dart
-├── widgets/
-│   └── order_card.dart
-└── constants/
-    └── order_constants.dart
+└── widgets/
 ```
 
-2. **Define model** with `@JsonSerializable()`:
+2. **Define model:**
 
 ```dart
 @JsonSerializable()
-class OrderModel {
-  final String id;
+class OrderModel extends BaseEntity {
   final String title;
-  final double amount;
 
-  OrderModel({required this.id, required this.title, required this.amount});
+  const OrderModel({required super.id, required this.title});
+
+  @override
+  OrderModel copyWith({String? id, String? title}) =>
+      OrderModel(id: id ?? this.id, title: title ?? this.title);
 
   factory OrderModel.fromJson(Map<String, dynamic> json) =>
       _$OrderModelFromJson(json);
@@ -632,17 +589,11 @@ class OrderModel {
 }
 ```
 
-3. **Run build_runner:**
-
-```bash
-flutter pub run build_runner build --delete-conflicting-outputs
-```
-
-4. **Create provider** with `@riverpod`:
+3. **Create provider:**
 
 ```dart
 @riverpod
-class Orders extends _$Orders {
+class OrdersNotifier extends _$OrdersNotifier {
   @override
   Future<List<OrderModel>> build() async {
     final client = ref.watch(supabaseCrudClientProvider);
@@ -654,7 +605,7 @@ class Orders extends _$Orders {
 }
 ```
 
-5. **Run build_runner** again and build your UI.
+4. **Run build_runner** and build your UI.
 
 ---
 
@@ -665,8 +616,8 @@ class Orders extends _$Orders {
 Edit `lib/src/ui/tokens/app_colors.dart`:
 
 ```dart
-static const Color primary = Color(0xFF521A75);    // Your brand color
-static const Color secondary = Color(0xFF7F5599);  // Your secondary color
+static const Color primary = Color(0xFF521A75);
+static const Color secondary = Color(0xFF7F5599);
 ```
 
 ### Typography
@@ -674,16 +625,10 @@ static const Color secondary = Color(0xFF7F5599);  // Your secondary color
 Edit `lib/src/ui/tokens/app_typography.dart`:
 
 ```dart
-static const String fontFamily = "Rubik";  // Change to your font
+static const String fontFamily = "Rubik";
 ```
 
-### Spacing Scale
-
-Edit `lib/src/ui/tokens/app_spacings.dart` to adjust the spacing scale.
-
-### Theme
-
-Edit `lib/src/ui/themes/light_theme.dart` and `dark_theme.dart` for advanced theme customization.
+> Do not set `color` on typography tokens — styles are theme-aware.
 
 ---
 
@@ -691,35 +636,45 @@ Edit `lib/src/ui/themes/light_theme.dart` and `dark_theme.dart` for advanced the
 
 ### In-App Purchases (RevenueCat)
 
-`PurchaseFailure` provides user-friendly error messages for RevenueCat errors.
-
 **To remove:**
 1. Delete `lib/src/core/errors/purchase_failure.dart`
 2. Remove the export from `lib/core_architecture.dart`
 3. Remove `purchases_flutter` from `pubspec.yaml`
 
-### Supabase / Dio
+---
 
-See [Backend Selection](#-backend-selection) above.
+## 📋 Changelog
+
+### v1.3.1
+- **Validators:** All methods now require consumer-provided error messages — package holds zero strings
+- **Removed:** `turkishPhone`, `turkishLiraFormat` and `tcNumber` validators
+- **Widgets:** `CustomDropdown` and `CustomMultiSelectDropdown` string parameters are now required
+- **DateHelper:** `getGreeting()` and `getRelativeDate()` now require consumer-provided labels
+- **Supabase:** `formatAuthError()` removed — auth exceptions are rethrown raw
+- **Supabase:** Manual auth token storage removed — SDK manages session
+
+### v1.3.0
+- **CoreInitializer:** Now automatically initializes backends based on `CoreConfig` flags
+- **BaseEntity:** Added `id`, `==`/`hashCode`, abstract `copyWith()`, `toString()`
+- **StorageConstants:** Centralized storage key constants — no more magic strings
+- **AppTypography:** Removed hardcoded light-mode colors — styles are now theme-aware
+- **Gap:** All properties converted to `const`
+- **CrudContract.rpc():** Return type changed from `void` to `Future<dynamic>`
+- **SupabaseCrudClient.count():** Now uses server-side counting
+- **SupabaseCrudClient.upsert():** `onConflict` parameter now correctly passed
+- **LoggerService:** `wtf()` renamed to `fatal()`
+- **ThemeProvider:** Notifier class renamed from `Theme` to `ThemeNotifier`
+- **DateHelper:** String constants `t` prefix removed (e.g. `tToday` → `today`)
+- **analysis_options.yaml:** Added with explicit linting rules
+- **Internal imports:** All 17 internal files now use relative imports
+- **Supabase barrel:** `onboarding_provider.dart` no longer imports `supabase.dart`
+
+### v1.2.0
+- Initial public release
 
 ---
 
-## 🔧 Required Dependencies for Consumer Projects
-
-| Dependency | Purpose | Required? |
-|------------|---------|-----------|
-| `flutter_dotenv` | Environment variables | ✅ Yes |
-| `json_annotation` | Model serialization | ✅ Yes |
-| `json_serializable` | Code generation (dev) | ✅ Yes |
-| `build_runner` | Code generation (dev) | ✅ Yes |
-| `riverpod_annotation` | Provider code generation | ✅ Yes |
-| `riverpod_generator` | Provider code generation (dev) | ✅ Yes |
-| `flutter_launcher_icons` | App icon generation | ❌ Optional |
-| `change_app_package_name` | Package name utility | ❌ Optional |
-
----
-
-## 🆘 Troubleshooting
+## 🔧 Troubleshooting
 
 ### Build Runner Errors
 
@@ -732,18 +687,20 @@ flutter pub run build_runner build --delete-conflicting-outputs
 
 ### Import Resolution
 
-- **Core only:** `import 'package:core_architecture/core_architecture.dart';`
-- **With Supabase:** `import 'package:core_architecture/supabase.dart';`
-- **With Dio:** `import 'package:core_architecture/dio.dart';`
+* **Core only:** `import 'package:core_architecture/core_architecture.dart';`
+* **With Supabase:** `import 'package:core_architecture/supabase.dart';`
+* **With Dio:** `import 'package:core_architecture/dio.dart';`
 
-> Do not mix barrel imports. Use `supabase.dart` or `dio.dart` — each re-exports `core_architecture.dart` automatically.
+### Backend Not Initialized
+
+If you see `SupabaseService must be initialized first`, ensure `CoreInitializer.initialize()` is called in `main()` with the correct flags. Do not call backend services manually.
 
 ---
 
 ## 📋 Quick Reference
 
 | Need | Use |
-|------|-----|
+| --- | --- |
 | Platform Check | `PlatformInfo.isWeb` |
 | Breakpoint | `context.windowSizeClass` |
 | Responsive Val | `context.responsive<double>(compact: 16, medium: 24)` |
@@ -751,99 +708,15 @@ flutter pub run build_runner build --delete-conflicting-outputs
 | Gap | `Gap.hMd` / `Gap.wSm` |
 | Color | `context.colorScheme.primary` |
 | Text Style | `AppTypography.bodyLg` |
-| Validation | `Validators.email` |
+| Validation | `Validators.email(value, errorMessage: ...)` |
 | Button | `CustomButton(...)` |
 | Input | `CustomTextField(...)` |
-| Dropdown | `CustomDropdown(...)` |
+| Dropdown | `CustomDropdown(hintText: ..., searchHint: ..., noResultsText: ...)` |
 | Navigate | `context.go('/path')` |
 | Snackbar | `context.showSuccess('Message')` |
 | Log | `ref.read(loggerServiceProvider).d('Msg', tag: 'Tag')` |
+| Fatal Log | `ref.read(loggerServiceProvider).fatal('Msg', error: e)` |
 | CRUD | `ref.watch(supabaseCrudClientProvider)` or `dioCrudClientProvider` |
+| Storage Key | `StorageConstants.accessToken` |
 | Theme | `ref.read(themeProvider.notifier).toggleTheme()` |
 | Storage | `ref.read(storageServiceProvider)` |
-
----
-
-## Routing Example
-
-```dart
-import 'package:core_architecture/core_architecture.dart';
-
-final routeConfigProvider = Provider<GoRouter>((ref) {
-  return GoRouter(
-    initialLocation: '/',
-    routes: [
-      GoRoute(
-        path: '/',
-        pageBuilder: (context, state) =>
-            _buildPageWithTransition(context, state, const HomePage()),
-      ),
-      GoRoute(
-        path: '/profile',
-        pageBuilder: (context, state) =>
-            _buildPageWithTransition(context, state, const ProfilePage()),
-      ),
-    ],
-  );
-});
-
-/// Custom page transition with fade + slide
-Page<dynamic> _buildPageWithTransition(
-  BuildContext context,
-  GoRouterState state,
-  Widget child,
-) {
-  return CustomTransitionPage<dynamic>(
-    key: state.pageKey,
-    child: child,
-    transitionsBuilder: (context, animation, secondaryAnimation, child) {
-      return SlideTransition(
-        position: Tween(begin: const Offset(0.05, 0.0), end: Offset.zero)
-            .chain(CurveTween(curve: Curves.easeInOut))
-            .animate(animation),
-        child: FadeTransition(
-          opacity: animation,
-          child: child,
-        ),
-      );
-    },
-    transitionDuration: AppDurations.normal,
-  );
-}
-```
-
----
-
-## Best Practices
-
-### ❌ Don't
-
-```dart
-Container(padding: EdgeInsets.all(16))
-Text('Hello', style: TextStyle(fontSize: 18))
-if (email.contains('@')) // manual validation
-```
-
-### ✅ Do
-
-```dart
-Container(padding: SpacingUtils.all(AppSpacings.wMd))
-Text('Hello', style: AppTypography.bodyLg)
-validator: Validators.email
-```
-
-### Constants Pattern
-
-```dart
-class AuthConstants {
-  static const String loginTitle = 'Sign In';
-  static const IconData emailIcon = Icons.email;
-  static const int minPasswordLength = 8;
-}
-```
-
----
-
-**Version:** 1.2.0
-**Status:** Active development
-**License:** MIT
