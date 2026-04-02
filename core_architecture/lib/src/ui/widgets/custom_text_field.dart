@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+// Not: Bu importlar sizin projenize özel tokenlardır.
+// Hata almamak için kendi projenizdeki yolları kontrol edin.
 import '../tokens/app_borders.dart';
 import '../tokens/app_radius.dart';
 import '../tokens/app_sizes.dart';
@@ -70,7 +72,6 @@ class _CustomTextFieldState extends State<CustomTextField> {
     super.initState();
     _obscure = widget.obscureText;
 
-    // Eğer controller varsa ama boşsa, initialValue aktar
     if (widget.controller != null &&
         widget.initialValue != null &&
         widget.controller!.text.isEmpty) {
@@ -82,6 +83,13 @@ class _CustomTextFieldState extends State<CustomTextField> {
   Widget build(BuildContext context) {
     final ColorScheme colors = context.colorScheme;
     final TextTheme textTheme = context.textTheme;
+
+    // Web üzerinde hover/error durumunda yazı renginin kaybolmasını engellemek için
+    // stilleri önceden tanımlıyoruz.
+    final TextStyle commonTextStyle = TextStyle(
+      fontFamily: AppTypography.fontFamily,
+      fontSize: textTheme.bodyLarge?.fontSize,
+    );
 
     return TextFormField(
       controller: widget.controller,
@@ -98,21 +106,32 @@ class _CustomTextFieldState extends State<CustomTextField> {
       onTap: widget.onTap,
       readOnly: widget.readOnly,
       enabled: widget.enabled,
-      style: textTheme.bodyLarge?.copyWith(
-        color: colors.onSurface,
-        fontFamily: AppTypography.fontFamily,
-      ),
+      // Ana yazı stili
+      style: commonTextStyle.copyWith(color: colors.onSurface),
       decoration: InputDecoration(
         labelText: widget.label,
-        labelStyle: const TextStyle(fontFamily: AppTypography.fontFamily),
+        // Label normal durumdayken
+        labelStyle: commonTextStyle.copyWith(color: colors.onSurfaceVariant),
+        // Hata varken yukarıdaki label'ın rengi (Web hover sorununu çözer)
+        floatingLabelStyle: WidgetStateTextStyle.resolveWith((states) {
+          if (states.contains(WidgetState.error)) {
+            return commonTextStyle.copyWith(color: colors.error);
+          }
+          if (states.contains(WidgetState.focused)) {
+            return commonTextStyle.copyWith(color: colors.primary);
+          }
+          return commonTextStyle.copyWith(color: colors.onSurfaceVariant);
+        }),
         hintText: widget.hint,
         hintStyle: textTheme.bodyMedium?.copyWith(
           color: colors.onSurfaceVariant.withValues(alpha: 0.6),
           fontFamily: AppTypography.fontFamily,
         ),
+        // Hata mesajı yazı stili
         errorStyle: TextStyle(
           fontFamily: AppTypography.fontFamily,
           color: colors.error,
+          fontWeight: FontWeight.w500,
         ),
         prefixIcon: widget.prefixIcon == null
             ? null
@@ -141,28 +160,26 @@ class _CustomTextFieldState extends State<CustomTextField> {
             ? colors.surfaceContainerHighest
             : colors.surfaceContainerHighest.withValues(alpha: 0.5),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.xl),
+          borderRadius: BorderRadius.circular(AppRadius.md),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.xl),
-          borderSide: BorderSide(
-            color: colors.outlineVariant,
-          ),
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          borderSide: BorderSide(color: colors.outlineVariant),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.xl),
+          borderRadius: BorderRadius.circular(AppRadius.md),
           borderSide: BorderSide(
             color: colors.primary,
             width: AppBorders.normal,
           ),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.xl),
+          borderRadius: BorderRadius.circular(AppRadius.md),
           borderSide: BorderSide(color: colors.error),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.xl),
+          borderRadius: BorderRadius.circular(AppRadius.md),
           borderSide: BorderSide(color: colors.error, width: AppBorders.normal),
         ),
         contentPadding:
