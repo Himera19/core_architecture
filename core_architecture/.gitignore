@@ -1,55 +1,167 @@
-# Miscellaneous
-*.class
-*.log
-*.pyc
-*.swp
-.DS_Store
-.atom/
-.buildlog/
-.history
-.svn/
-migrate_working_dir/
+# =============================================================================
+# SECURITY — never commit these
+# =============================================================================
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.p8
+*.mobileprovision
+*.keystore
+*.jks
+google-services.json
+GoogleService-Info.plist
+AuthKey_*.p8
 
-# IntelliJ related
-*.iml
-*.ipr
-*.iws
-.idea/
 
-# VS Code
-.vscode/
-
-# Flutter/Dart/Pub related
-**/doc/api/
-**/ios/Flutter/.last_build_id
+# =============================================================================
+# FLUTTER & DART
+# =============================================================================
+# Build outputs
+build/
 .dart_tool/
 .flutter-plugins
 .flutter-plugins-dependencies
 .packages
-.pub-cache/
-.pub/
-/build/
+pubspec.lock
 
-# Symbolication related
-app.*.symbols
-
-# Obfuscation related
-app.*.map.json
-
-# Android Studio will place build artifacts here
-/android/app/debug
-/android/app/profile
-/android/app/release
-
-# Environment
-.env
-.env.local
-.env.*.local
-
-# Generated files
+# Code generation
 *.g.dart
 *.freezed.dart
-*.mocks.dart
+*.gr.dart
 
 # Coverage
 coverage/
+
+# Dart analysis
+.dart_tool/analysis-driver/
+
+
+# =============================================================================
+# iOS & XCODE
+# =============================================================================
+**/DerivedData/
+**/Pods/
+**/.symlinks/
+*.mode1v3
+*.mode2v3
+*.moved-aside
+*.pbxuser
+*.perspectivev3
+xcuserdata/
+*.xccheckout
+*.xcscmblueprint
+profile
+Icon?
+ServiceDefinitions.json
+
+# Flutter iOS generated
+Flutter/App.framework
+Flutter/Flutter.framework
+Flutter/Flutter.podspec
+Flutter/Generated.xcconfig
+Flutter/ephemeral/
+Flutter/app.flx
+Flutter/app.zip
+Flutter/flutter_assets/
+Flutter/flutter_export_environment.sh
+Runner/GeneratedPluginRegistrant.*
+
+# Exceptions
+!default.mode1v3
+!default.mode2v3
+!default.pbxuser
+!default.perspectivev3
+
+
+# =============================================================================
+# ANDROID
+# =============================================================================
+**/android/**/gradle-wrapper.jar
+**/android/.gradle
+**/android/captures/
+**/android/gradlew
+**/android/gradlew.bat
+**/android/local.properties
+**/android/**/GeneratedPluginRegistrant.java
+**/android/key.properties
+*.aab
+
+
+# =============================================================================
+# MACOS
+# =============================================================================
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+.fseventsd
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+
+# =============================================================================
+# VSCODE
+# =============================================================================
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/tasks.json
+!.vscode/settings.json
+
+
+# =============================================================================
+# JETBRAINS (Android Studio, IntelliJ)
+# =============================================================================
+.idea/
+*.iml
+*.iws
+*.ipr
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/shelf/
+out/
+
+
+# =============================================================================
+# MISC
+# =============================================================================
+# Vagrant
+**/.vagrant/
+
+# SCons
+.sconsign.dblite
+.tags*
+
+# Logs
+*.log
+logs/
+
+# OS generated
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Temp files
+*.swp
+*.swo
+*~
+*.tmp
+
+# Archives
+*.zip
+*.tar.gz
+*.rar
+
+# Generated
+**/.generated/
+**/*sync/
