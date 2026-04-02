@@ -24,7 +24,6 @@ Drop it into any Flutter project as a local package, keep what you need, delete 
 * [Adding a New Feature](#-adding-a-new-feature)
 * [Customization Guide](#-customization-guide)
 * [Optional Modules](#-optional-modules)
-* [Claude Code Integration](#-claude-code-integration)
 * [Changelog](#-changelog)
 * [Troubleshooting](#-troubleshooting)
 * [Quick Reference](#-quick-reference)
