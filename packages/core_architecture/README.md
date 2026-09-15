@@ -19,7 +19,7 @@ dependencies:
     git:
       url: https://github.com/Himera19/core_architecture.git
       path: packages/core_architecture
-      ref: v3.1.0
+      ref: v3.2.0
 ```
 
 ```dart
@@ -556,9 +556,11 @@ MaterialApp(
 );
 ```
 
-Only the four accent slots change — `primary`, `onPrimary`, `secondary`, `onSecondary`. The Slate
-surfaces, borders, text colors and the `error` pair stay exactly as they are, so re-branding moves
-the accent without disturbing the neutral palette the rest of the design system is built on.
+Every accent slot changes — `primary` and `secondary` with their `on*` partners, and the derived
+ones Material widgets reach for on their own: the containers, `tertiary`, `inversePrimary`. A
+progress track or a filled chip follows the brand without you wiring anything. The Slate surfaces,
+borders, text colors and the `error` pair stay exactly as they are, so re-branding moves the accent
+without disturbing the neutral palette the rest of the design system is built on.
 
 The tones come from `ColorScheme.fromSeed`, so Material 3's own tonal-palette algorithm picks
 them: it shifts hue and chroma rather than just lightness, and it guarantees a readable `on*`

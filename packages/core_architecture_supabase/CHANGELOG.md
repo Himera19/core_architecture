@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.2.0
+
+Version bump to track `core_architecture` 3.2.0. This package's own API is unchanged. The core it
+re-exports fixes a startup race that reverted the user's theme choice, and `brandColor` now reaches
+every accent slot instead of only `primary` and `secondary`.
+
 ## 3.1.0
 
 Version bump to track `core_architecture` 3.1.0. This package's own API is unchanged. The core it

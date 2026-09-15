@@ -12,12 +12,20 @@ part 'theme_provider.g.dart';
 ///
 /// Uses [StorageService] and [LoggerService] via Riverpod DI,
 /// making it fully testable and consistent with the architecture.
+///
+/// [build] returns [ThemeMode.light] synchronously and loads the persisted
+/// mode in the background, so the first frame never waits on the keychain.
+/// A mode the user picks while that read is still in flight wins — see
+/// [_loadTheme].
 @Riverpod(keepAlive: true)
 class ThemeNotifier extends _$ThemeNotifier {
   late final LoggerService _logger;
   late final StorageService _storage;
 
   static const String _storageKey = StorageConstants.themeMode;
+
+  /// Set once the user picks a mode, so a late [_loadTheme] cannot undo it.
+  bool _userChose = false;
 
   @override
   ThemeMode build() {
@@ -28,9 +36,24 @@ class ThemeNotifier extends _$ThemeNotifier {
   }
 
   /// Loads saved theme mode from secure storage.
+  ///
+  /// This runs unawaited from [build], so on a slow keychain it can finish
+  /// *after* the user has already toggled the theme. Writing the stored value
+  /// unconditionally at that point would silently revert their choice — the
+  /// UI snapping back to the old palette a moment after the tap — so a mode
+  /// chosen in the meantime is left alone.
   Future<void> _loadTheme() async {
     try {
       final String? stored = await _storage.read(key: _storageKey);
+
+      if (_userChose) {
+        _logger.i(
+          'Theme load ignored, user already chose ${state.name}',
+          tag: 'Theme',
+        );
+        return;
+      }
+
       if (stored == 'light') {
         state = ThemeMode.light;
       } else if (stored == 'dark') {
@@ -44,27 +67,24 @@ class ThemeNotifier extends _$ThemeNotifier {
 
   /// Sets a specific theme mode and persists securely.
   Future<void> setThemeMode(ThemeMode mode) async {
+    _userChose = true;
+    state = mode;
+    // Logged before the write so the trace reflects when the UI changed, not
+    // when the keychain came back.
+    _logger.i('Theme set to ${mode.name}', tag: 'Theme');
+
     try {
-      state = mode;
       await _storage.write(key: _storageKey, value: mode.name);
-      _logger.i('Theme set to ${mode.name}', tag: 'Theme');
     } catch (e, st) {
       _logger.e('Theme set failed', error: e, stackTrace: st, tag: 'Theme');
     }
   }
 
   /// Toggles between light and dark modes and persists securely.
-  Future<void> toggleTheme() async {
-    try {
-      final ThemeMode newMode = state == ThemeMode.light
-          ? ThemeMode.dark
-          : ThemeMode.light;
-      state = newMode;
-      await _storage.write(key: _storageKey, value: newMode.name);
-      _logger.i('Theme switched to ${newMode.name}', tag: 'Theme');
-    } catch (e, st) {
-      _logger.e('Theme toggle failed', error: e, stackTrace: st, tag: 'Theme');
-    }
+  Future<void> toggleTheme() {
+    return setThemeMode(
+      state == ThemeMode.light ? ThemeMode.dark : ThemeMode.light,
+    );
   }
 }
 

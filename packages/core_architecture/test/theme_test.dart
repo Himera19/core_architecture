@@ -122,6 +122,39 @@ void main() {
       }
     });
 
+    test('carries the brand into the derived accent slots too', () {
+      // Regression: the scheme used to be built with `base.copyWith(primary:
+      // …)`, which froze every slot the const base left unset on the default
+      // blue — a green brand still rendered a blue progress track.
+      for (final brightness in Brightness.values) {
+        final base = colorSchemeFor(brightness: brightness);
+        final branded = colorSchemeFor(
+          brightness: brightness,
+          brandColor: brand,
+        );
+
+        for (final slot in {
+          'primaryContainer': (branded.primaryContainer, base.primaryContainer),
+          'onPrimaryContainer': (
+            branded.onPrimaryContainer,
+            base.onPrimaryContainer,
+          ),
+          'secondaryContainer': (
+            branded.secondaryContainer,
+            base.secondaryContainer,
+          ),
+          'tertiary': (branded.tertiary, base.tertiary),
+          'inversePrimary': (branded.inversePrimary, base.inversePrimary),
+        }.entries) {
+          expect(
+            slot.value.$1,
+            isNot(slot.value.$2),
+            reason: '$brightness ${slot.key} should follow the brand color',
+          );
+        }
+      }
+    });
+
     test('leaves the neutral palette and error pair untouched', () {
       for (final brightness in Brightness.values) {
         final base = colorSchemeFor(brightness: brightness);
@@ -130,12 +163,45 @@ void main() {
           brandColor: brand,
         );
 
-        expect(branded.surface, base.surface);
-        expect(branded.onSurface, base.onSurface);
-        expect(branded.surfaceContainerHighest, base.surfaceContainerHighest);
-        expect(branded.outline, base.outline);
-        expect(branded.error, base.error);
-        expect(branded.onError, base.onError);
+        // The whole neutral family, not just the slots the base sets: the
+        // rest resolve to the flat Slate surface, and a seeded scheme would
+        // quietly tint them with the brand hue.
+        for (final slot in {
+          'surface': (branded.surface, base.surface),
+          'onSurface': (branded.onSurface, base.onSurface),
+          'surfaceDim': (branded.surfaceDim, base.surfaceDim),
+          'surfaceBright': (branded.surfaceBright, base.surfaceBright),
+          'surfaceContainerLowest': (
+            branded.surfaceContainerLowest,
+            base.surfaceContainerLowest,
+          ),
+          'surfaceContainerLow': (
+            branded.surfaceContainerLow,
+            base.surfaceContainerLow,
+          ),
+          'surfaceContainer': (branded.surfaceContainer, base.surfaceContainer),
+          'surfaceContainerHigh': (
+            branded.surfaceContainerHigh,
+            base.surfaceContainerHigh,
+          ),
+          'surfaceContainerHighest': (
+            branded.surfaceContainerHighest,
+            base.surfaceContainerHighest,
+          ),
+          'onSurfaceVariant': (branded.onSurfaceVariant, base.onSurfaceVariant),
+          'outline': (branded.outline, base.outline),
+          'outlineVariant': (branded.outlineVariant, base.outlineVariant),
+          'inverseSurface': (branded.inverseSurface, base.inverseSurface),
+          'onInverseSurface': (branded.onInverseSurface, base.onInverseSurface),
+          'error': (branded.error, base.error),
+          'onError': (branded.onError, base.onError),
+        }.entries) {
+          expect(
+            slot.value.$1,
+            slot.value.$2,
+            reason: '$brightness ${slot.key} must stay on the base palette',
+          );
+        }
         expect(branded.brightness, base.brightness);
       }
     });

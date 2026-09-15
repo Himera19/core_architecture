@@ -3,7 +3,7 @@
 A production-ready, modular Flutter architecture built on **Riverpod 3**, split into a
 backend-agnostic core plus optional backend packages.
 
-**Version:** 3.1.0 · **Status:** Active development · **License:** MIT
+**Version:** 3.2.0 · **Status:** Active development · **License:** MIT
 
 > **Why the split?** In v1 everything shipped as one package, so every consumer pulled in
 > `supabase_flutter`, `dio` and `purchases_flutter` whether they used them or not. In v2 you
@@ -101,7 +101,7 @@ dependencies:
     git:
       url: https://github.com/Himera19/core_architecture.git
       path: packages/core_architecture
-      ref: v3.1.0
+      ref: v3.2.0
 ```
 
 ```dart
@@ -119,7 +119,7 @@ dependencies:
     git:
       url: https://github.com/Himera19/core_architecture.git
       path: packages/core_architecture_supabase
-      ref: v3.1.0
+      ref: v3.2.0
 ```
 
 ```dart
@@ -134,7 +134,7 @@ dependencies:
     git:
       url: https://github.com/Himera19/core_architecture.git
       path: packages/core_architecture_dio
-      ref: v3.1.0
+      ref: v3.2.0
 ```
 
 ```dart
@@ -484,9 +484,10 @@ MaterialApp(
 );
 ```
 
-`brandColor` moves only the accent slots — the neutral Slate palette stays put — and derives its
-tones from `ColorScheme.fromSeed`, so the `on*` pairs stay readable for any seed. For anything
-else, `copyWith` on the result composes as usual.
+`brandColor` moves every accent slot — including the containers and `tertiary` that Material
+widgets pick up on their own — while the neutral Slate palette stays put. Tones come from
+`ColorScheme.fromSeed`, so the `on*` pairs stay readable for any seed. For anything else,
+`copyWith` on the result composes as usual.
 
 Full reference — every value, every widget parameter, and the customization rules:
 [`packages/core_architecture/README.md`](packages/core_architecture/README.md#design-tokens).

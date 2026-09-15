@@ -37,15 +37,17 @@ const ColorScheme darkColorScheme = ColorScheme(
 /// With [brandColor] omitted this returns [lightColorScheme] or
 /// [darkColorScheme] **unchanged** — the hand-tuned default palette.
 ///
-/// When [brandColor] is given, only the four brand slots — `primary`,
-/// `onPrimary`, `secondary`, `onSecondary` — are replaced. Their tones come
-/// from [ColorScheme.fromSeed], so Material 3's own tonal-palette algorithm
-/// picks them: it shifts hue and chroma, not just lightness, and guarantees
+/// When [brandColor] is given, every accent slot follows it — not just
+/// `primary` and `secondary` but the containers, `tertiary` and
+/// `inversePrimary` that Material widgets reach for on their own (a progress
+/// track, a filled chip, a snackbar action). The tones come from
+/// [ColorScheme.fromSeed], so Material 3's own tonal-palette algorithm picks
+/// them: it shifts hue and chroma, not just lightness, and guarantees
 /// readable `on*` pairs for any seed, including light ones like yellow.
 ///
-/// Everything else — the Slate surfaces, borders, text and the `error` pair —
-/// is kept from the base scheme, so re-branding changes the accent without
-/// disturbing the neutral palette the rest of the design system is built on.
+/// The design system's own neutrals — the Slate surfaces, borders and text —
+/// and the `error` pair are put back on top, so re-branding changes the accent
+/// without disturbing the palette the rest of the system is built on.
 ColorScheme colorSchemeFor({
   required Brightness brightness,
   Color? brandColor,
@@ -61,10 +63,32 @@ ColorScheme colorSchemeFor({
     brightness: brightness,
   );
 
-  return base.copyWith(
-    primary: seeded.primary,
-    onPrimary: seeded.onPrimary,
-    secondary: seeded.secondary,
-    onSecondary: seeded.onSecondary,
+  // Seeded scheme first, neutrals back on top — not `base.copyWith(primary:
+  // …)`. The base schemes are `const` and leave the derived accent slots
+  // unset, where they resolve off `primary`; `copyWith` reads them through
+  // those getters and writes the results back as literals, freezing
+  // `primaryContainer` and friends on the *default* blue accent. Branding
+  // then reached `primary` but left a blue progress track behind it.
+  //
+  // Every neutral is listed, not just the ones the base sets: the unset ones
+  // resolve to the flat Slate surface, and leaving them to the seeded scheme
+  // would tint cards and dividers with the brand hue.
+  return seeded.copyWith(
+    surface: base.surface,
+    onSurface: base.onSurface,
+    surfaceDim: base.surfaceDim,
+    surfaceBright: base.surfaceBright,
+    surfaceContainerLowest: base.surfaceContainerLowest,
+    surfaceContainerLow: base.surfaceContainerLow,
+    surfaceContainer: base.surfaceContainer,
+    surfaceContainerHigh: base.surfaceContainerHigh,
+    surfaceContainerHighest: base.surfaceContainerHighest,
+    onSurfaceVariant: base.onSurfaceVariant,
+    outline: base.outline,
+    outlineVariant: base.outlineVariant,
+    inverseSurface: base.inverseSurface,
+    onInverseSurface: base.onInverseSurface,
+    error: base.error,
+    onError: base.onError,
   );
 }
