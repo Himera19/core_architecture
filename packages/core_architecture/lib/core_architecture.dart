@@ -37,6 +37,7 @@ export 'src/ui/themes/app_theme.dart';
 export 'src/ui/themes/light_theme.dart';
 export 'src/ui/themes/dark_theme.dart';
 export 'src/ui/themes/app_color_scheme.dart';
+export 'src/ui/themes/core_components_theme.dart';
 
 // Tokens
 export 'src/ui/tokens/app_borders.dart';

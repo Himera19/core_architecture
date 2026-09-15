@@ -8,10 +8,11 @@ Future<void> pumpInBox(
   WidgetTester tester,
   Widget child, {
   double width = 200,
+  ThemeData? theme,
 }) async {
   await tester.pumpWidget(
     MaterialApp(
-      theme: AppTheme.light(),
+      theme: theme ?? AppTheme.light(),
       home: Scaffold(body: Center(child: SizedBox(width: width, child: child))),
     ),
   );
@@ -157,6 +158,142 @@ void main() {
 
       expect(find.byType(CircularProgressIndicator), findsNothing);
       expect(find.text('Save'), findsOneWidget);
+    });
+  });
+
+  group('an app-wide indicator on the theme', () {
+    ThemeData themeWithBuilder() => AppTheme.light(
+      loadingIndicatorBuilder: (context, color) =>
+          Text('app spinner', style: TextStyle(color: color)),
+    );
+
+    testWidgets('serves every button without touching the call sites', (
+      tester,
+    ) async {
+      await pumpInBox(
+        tester,
+        CustomButton(text: 'Save', isLoading: true, onPressed: () {}),
+        theme: themeWithBuilder(),
+      );
+
+      expect(find.text('app spinner'), findsOneWidget);
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+    });
+
+    testWidgets('is handed the foreground of the button asking', (
+      tester,
+    ) async {
+      final ColorScheme scheme = AppTheme.light().colorScheme;
+
+      await pumpInBox(
+        tester,
+        CustomButton(
+          text: 'Save',
+          type: ButtonType.outlined,
+          isLoading: true,
+          onPressed: () {},
+        ),
+        theme: themeWithBuilder(),
+      );
+
+      // One builder covers every ButtonType because the colour is passed in.
+      expect(
+        tester.widget<Text>(find.text('app spinner')).style?.color,
+        scheme.primary,
+      );
+    });
+
+    testWidgets('yields to a button that brings its own', (tester) async {
+      await pumpInBox(
+        tester,
+        CustomButton(
+          text: 'Save',
+          isLoading: true,
+          loadingIndicator: const Text('this button only'),
+          onPressed: () {},
+        ),
+        theme: themeWithBuilder(),
+      );
+
+      expect(find.text('this button only'), findsOneWidget);
+      expect(find.text('app spinner'), findsNothing);
+    });
+
+    testWidgets('the extension is installed even when none was given', (
+      tester,
+    ) async {
+      await pumpInBox(tester, CustomButton(text: 'Save', onPressed: () {}));
+
+      final BuildContext context = tester.element(find.byType(CustomButton));
+      final CoreComponentsTheme? extension = CoreComponentsTheme.maybeOf(
+        context,
+      );
+
+      expect(extension, isNotNull);
+      expect(extension!.loadingIndicatorBuilder, isNull);
+    });
+  });
+
+  group('a loading button does not accept input', () {
+    testWidgets('its callback is not reachable', (tester) async {
+      int taps = 0;
+
+      await pumpInBox(
+        tester,
+        CustomButton(
+          text: 'Save',
+          isLoading: true,
+          onPressed: () => taps++,
+        ),
+      );
+
+      // It used to be handed an empty closure, which left Material treating it
+      // as enabled: it rippled and took focus while doing nothing.
+      expect(
+        tester.widget<ElevatedButton>(find.byType(ElevatedButton)).enabled,
+        isFalse,
+      );
+
+      await tester.tap(find.byType(ElevatedButton));
+      await tester.pump();
+
+      expect(taps, 0);
+    });
+
+    testWidgets('but keeps its own colours, unlike a disabled one', (
+      tester,
+    ) async {
+      final ColorScheme scheme = AppTheme.light().colorScheme;
+
+      await pumpInBox(
+        tester,
+        CustomButton(text: 'Save', isLoading: true, onPressed: () {}),
+      );
+
+      final ButtonStyle? style = tester
+          .widget<ElevatedButton>(find.byType(ElevatedButton))
+          .style;
+
+      // Loading reads as busy, not as unavailable, so the brand background
+      // stays and the spinner stays legible on it.
+      expect(
+        style?.backgroundColor?.resolve({WidgetState.disabled}),
+        scheme.primary,
+      );
+    });
+
+    testWidgets('a genuinely disabled button still greys out', (tester) async {
+      await pumpInBox(
+        tester,
+        const CustomButton(text: 'Save', onPressed: null),
+      );
+
+      final ButtonStyle? style = tester
+          .widget<ElevatedButton>(find.byType(ElevatedButton))
+          .style;
+
+      // Left unset, so Material's own disabled colours apply.
+      expect(style?.backgroundColor?.resolve({WidgetState.disabled}), isNull);
     });
   });
 }

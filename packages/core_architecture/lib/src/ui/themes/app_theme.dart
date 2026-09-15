@@ -6,6 +6,7 @@ import '../tokens/app_elevations.dart';
 import '../tokens/app_radius.dart';
 import '../tokens/app_spacings.dart';
 import 'app_color_scheme.dart';
+import 'core_components_theme.dart';
 
 /// Vertical padding inside buttons.
 ///
@@ -39,11 +40,13 @@ final class AppTheme {
     Color? brandColor,
     String? fontFamily,
     ColorScheme? colorScheme,
+    LoadingIndicatorBuilder? loadingIndicatorBuilder,
   }) => _build(
     brightness: Brightness.light,
     brandColor: brandColor,
     fontFamily: fontFamily,
     colorScheme: colorScheme,
+    loadingIndicatorBuilder: loadingIndicatorBuilder,
   );
 
   /// Dark theme. See [AppTheme] for the parameters.
@@ -51,11 +54,13 @@ final class AppTheme {
     Color? brandColor,
     String? fontFamily,
     ColorScheme? colorScheme,
+    LoadingIndicatorBuilder? loadingIndicatorBuilder,
   }) => _build(
     brightness: Brightness.dark,
     brandColor: brandColor,
     fontFamily: fontFamily,
     colorScheme: colorScheme,
+    loadingIndicatorBuilder: loadingIndicatorBuilder,
   );
 
   /// [brandColor] re-brands the accent slots — see [colorSchemeFor].
@@ -65,11 +70,15 @@ final class AppTheme {
   ///
   /// [fontFamily] sets the family for the whole theme. Leave it out to keep
   /// the platform default. Register the family in your app's `pubspec.yaml`.
+  ///
+  /// [loadingIndicatorBuilder] is the spinner every [CustomButton] shows while
+  /// it is loading — see [CoreComponentsTheme]. Leave it out for Material's.
   static ThemeData _build({
     required Brightness brightness,
     Color? brandColor,
     String? fontFamily,
     ColorScheme? colorScheme,
+    LoadingIndicatorBuilder? loadingIndicatorBuilder,
   }) {
     final bool isDark = brightness == Brightness.dark;
 
@@ -196,6 +205,12 @@ final class AppTheme {
           return null;
         }),
       ),
+
+      // Always installed, so a widget can read the extension without having to
+      // handle its absence differently from an absent builder.
+      extensions: [
+        CoreComponentsTheme(loadingIndicatorBuilder: loadingIndicatorBuilder),
+      ],
     );
   }
 }

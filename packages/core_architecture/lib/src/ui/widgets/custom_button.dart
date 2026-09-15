@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../themes/core_components_theme.dart';
 import '../tokens/app_borders.dart';
 import '../tokens/app_radius.dart';
 import '../tokens/app_sizes.dart';
@@ -65,10 +66,19 @@ class CustomButton extends StatelessWidget {
       height: resolvedHeight,
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: isLoading ? () {} : onPressed,
+        // Null, not an empty callback: a loading button used to stay enabled
+        // as far as Material was concerned — it rippled, showed a click
+        // cursor, and answered to the keyboard, while doing nothing.
+        onPressed: isLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(
           backgroundColor: style.background,
           foregroundColor: style.foreground,
+          // Loading is not the same as disabled: the button keeps its own
+          // colours so the spinner stays legible on them, and only stops
+          // accepting input. A button disabled by a null onPressed still
+          // greys out the usual way, because these are then left unset.
+          disabledBackgroundColor: isLoading ? style.background : null,
+          disabledForegroundColor: isLoading ? style.foreground : null,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadius.md),
             side: style.border,
@@ -103,7 +113,13 @@ class CustomButton extends StatelessWidget {
     final _ButtonStyles buttonStyle = _resolveStyle(type, colors);
 
     if (isLoading) {
+      // Narrowest wins: this button's own widget, then the app-wide builder
+      // on the theme, then Material's spinner.
+      final LoadingIndicatorBuilder? fromTheme =
+          CoreComponentsTheme.maybeOf(context)?.loadingIndicatorBuilder;
+
       return loadingIndicator ??
+          fromTheme?.call(context, buttonStyle.foreground) ??
           SizedBox(
             height: AppSizes.iconMd,
             width: AppSizes.iconMd,
