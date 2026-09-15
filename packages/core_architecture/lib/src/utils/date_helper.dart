@@ -82,26 +82,33 @@ class DateHelper {
     required String daysAgoSuffix,
     required String daysLaterSuffix,
   }) {
-    final DateTime now = DateTime.now();
-    final Duration diff = now.difference(date);
+    // Calendar days apart, not 24-hour blocks. `now.difference(date).inDays`
+    // measures elapsed time: yesterday 23:00 read at 01:00 today is two hours
+    // apart, so it reported "today". Comparing midnights is what "yesterday"
+    // actually means. The hours/24 rounding absorbs the 23- and 25-hour days
+    // that daylight saving produces, which would otherwise shift every label
+    // by one for the rest of the day.
+    final DateTime today = getStartOfDay(DateTime.now());
+    final DateTime target = getStartOfDay(date);
+    final int days = (today.difference(target).inHours / 24).round();
 
     // Same day
-    if (diff.inDays == 0) return todayLabel;
+    if (days == 0) return todayLabel;
 
     // One day before
-    if (diff.inDays == 1) return yesterdayLabel;
+    if (days == 1) return yesterdayLabel;
 
     // One day after
-    if (diff.inDays == -1) return tomorrowLabel;
+    if (days == -1) return tomorrowLabel;
 
     // Within past 7 days
-    if (diff.inDays > 1 && diff.inDays < 7) {
-      return '${diff.inDays} $daysAgoSuffix';
+    if (days > 1 && days < 7) {
+      return '$days $daysAgoSuffix';
     }
 
     // Within next 7 days
-    if (diff.inDays < -1 && diff.inDays > -7) {
-      return '${diff.inDays.abs()} $daysLaterSuffix';
+    if (days < -1 && days > -7) {
+      return '${days.abs()} $daysLaterSuffix';
     }
 
     // Otherwise exact date

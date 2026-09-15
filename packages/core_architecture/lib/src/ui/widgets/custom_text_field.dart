@@ -7,7 +7,6 @@ import '../tokens/app_borders.dart';
 import '../tokens/app_radius.dart';
 import '../tokens/app_sizes.dart';
 import '../tokens/app_spacings.dart';
-import '../tokens/app_typography.dart';
 import '../../utils/extensions/context_extensions.dart';
 import '../../utils/spacing_utils.dart';
 
@@ -86,8 +85,10 @@ class _CustomTextFieldState extends State<CustomTextField> {
 
     // To prevent text color from disappearing on hover/error state on Web,
     // we define styles in advance.
+    // No fontFamily: leaving it unset lets the style inherit the theme font,
+    // which is what AppTheme(fontFamily: ...) sets. A fixed name here would
+    // override the app's own choice.
     final TextStyle commonTextStyle = TextStyle(
-      fontFamily: AppTypography.fontFamily,
       fontSize: textTheme.bodyLarge?.fontSize,
     );
 
@@ -125,11 +126,9 @@ class _CustomTextFieldState extends State<CustomTextField> {
         hintText: widget.hint,
         hintStyle: textTheme.bodyMedium?.copyWith(
           color: colors.onSurfaceVariant.withValues(alpha: 0.6),
-          fontFamily: AppTypography.fontFamily,
         ),
         // Error message text style
         errorStyle: TextStyle(
-          fontFamily: AppTypography.fontFamily,
           color: colors.error,
           fontWeight: FontWeight.w500,
         ),

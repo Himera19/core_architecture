@@ -245,11 +245,17 @@ void main() {
   });
 
   group('fontFamily', () {
-    test('defaults to the AppTypography placeholder', () {
-      expect(
-        lightTheme.textTheme.bodyMedium?.fontFamily,
-        AppTypography.fontFamily,
-      );
+    test('defaults to the Material typography font, not a placeholder', () {
+      // The old default named "YourFontName", a family that ships with
+      // nothing: it resolved to the platform font anyway while occupying the
+      // slot, so it quietly beat the app's own AppTheme(fontFamily: ...).
+      // Passing nothing now leaves Material's own family untouched.
+      final String? material = Typography.material2021().black.bodyMedium
+          ?.fontFamily;
+
+      expect(lightTheme.textTheme.bodyMedium?.fontFamily, material);
+      expect(darkTheme.textTheme.bodyMedium?.fontFamily, material);
+      expect(lightTheme.textTheme.bodyMedium?.fontFamily, isNot('YourFontName'));
     });
 
     test('override reaches ThemeData and every text style', () {
@@ -258,6 +264,15 @@ void main() {
       expect(themed.textTheme.bodyMedium?.fontFamily, 'Inter');
       expect(themed.textTheme.headlineLarge?.fontFamily, 'Inter');
       expect(themed.textTheme.labelSmall?.fontFamily, 'Inter');
+    });
+
+    test('token text styles carry no family of their own', () {
+      // They are meant to be merged onto the theme's style, which supplies the
+      // family. Stamping one here was what broke the override inside
+      // CustomButton, CustomTextField and the snackbar helpers.
+      expect(AppTypography.bodyLg.fontFamily, isNull);
+      expect(AppTypography.headlineLg.fontFamily, isNull);
+      expect(AppTypography.labelSm.fontFamily, isNull);
     });
   });
 

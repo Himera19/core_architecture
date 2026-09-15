@@ -19,8 +19,12 @@ part 'theme_provider.g.dart';
 /// [_loadTheme].
 @Riverpod(keepAlive: true)
 class ThemeNotifier extends _$ThemeNotifier {
-  late final LoggerService _logger;
-  late final StorageService _storage;
+  /// Deliberately `late`, not `late final`: Riverpod re-runs [build] on the
+  /// same notifier instance whenever a watched provider is rebuilt, and a
+  /// second assignment to a `late final` field throws
+  /// `LateInitializationError`, leaving the provider stuck in an error state.
+  late LoggerService _logger;
+  late StorageService _storage;
 
   static const String _storageKey = StorageConstants.themeMode;
 
@@ -31,6 +35,12 @@ class ThemeNotifier extends _$ThemeNotifier {
   ThemeMode build() {
     _logger = ref.watch(loggerServiceProvider);
     _storage = ref.watch(storageServiceProvider);
+
+    // A rebuild resets [state] to the default below, so the stored mode has to
+    // be read again — otherwise a stale `true` here would make [_loadTheme]
+    // skip the read and strand the app on light.
+    _userChose = false;
+
     _loadTheme();
     return ThemeMode.light;
   }

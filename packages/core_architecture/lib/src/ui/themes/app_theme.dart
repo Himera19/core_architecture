@@ -5,7 +5,6 @@ import '../tokens/app_colors.dart';
 import '../tokens/app_elevations.dart';
 import '../tokens/app_radius.dart';
 import '../tokens/app_spacings.dart';
-import '../tokens/app_typography.dart';
 import 'app_color_scheme.dart';
 
 /// Vertical padding inside buttons.
@@ -64,8 +63,8 @@ final class AppTheme {
   /// [colorScheme] replaces the scheme outright and takes precedence over
   /// [brandColor], for apps that keep a full hand-built scheme.
   ///
-  /// [fontFamily] overrides [AppTypography.fontFamily], which ships as a
-  /// placeholder. Register the family in your app's `pubspec.yaml`.
+  /// [fontFamily] sets the family for the whole theme. Leave it out to keep
+  /// the platform default. Register the family in your app's `pubspec.yaml`.
   static ThemeData _build({
     required Brightness brightness,
     Color? brandColor,
@@ -78,7 +77,9 @@ final class AppTheme {
         colorScheme ??
         colorSchemeFor(brightness: brightness, brandColor: brandColor);
 
-    final String font = fontFamily ?? AppTypography.fontFamily;
+    // Null leaves the platform default in place — never a placeholder family
+    // name, which resolves to nothing and silently falls back anyway.
+    final String? font = fontFamily;
 
     // The only two things that still branch on mode: the base typography,
     // and the muted text color, which has no ColorScheme slot.

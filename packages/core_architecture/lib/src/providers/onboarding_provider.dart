@@ -10,8 +10,11 @@ part 'onboarding_provider.g.dart';
 @Riverpod(keepAlive: true)
 class OnboardingState extends _$OnboardingState {
   static const String _storageKey = StorageConstants.onboardingSeen;
-  late final StorageService _storage;
-  late final LoggerService _logger;
+  /// `late`, not `late final` — see [ThemeNotifier]: Riverpod re-runs [build]
+  /// on the same notifier instance, and a second assignment to a `late final`
+  /// field throws `LateInitializationError`.
+  late StorageService _storage;
+  late LoggerService _logger;
 
   @override
   FutureOr<bool> build() async {

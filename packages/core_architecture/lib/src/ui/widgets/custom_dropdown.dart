@@ -15,7 +15,13 @@ class CustomDropdownConstants {
   static const IconData clear = Icons.clear;
 }
 
-enum CustomDropdownType { normal, searchable, multiSelect }
+/// How a [CustomDropdown] picks a value.
+///
+/// Multi-select is not a variant here: selecting several values needs a
+/// different callback and a different validator signature, so it lives in
+/// [CustomMultiSelectDropdown]. A `multiSelect` case in this enum only looked
+/// like it worked — the widget fell through to single-selection behaviour.
+enum CustomDropdownType { normal, searchable }
 
 class CustomDropdown<T> extends StatefulWidget {
   final String label;
@@ -53,8 +59,6 @@ class CustomDropdown<T> extends StatefulWidget {
 
 class _CustomDropdownState<T> extends State<CustomDropdown<T>> {
   T? _selectedValue;
-  final TextEditingController _searchController = TextEditingController();
-  final FocusNode _focusNode = FocusNode();
 
   @override
   void initState() {
@@ -70,13 +74,6 @@ class _CustomDropdownState<T> extends State<CustomDropdown<T>> {
         _selectedValue = widget.value;
       });
     }
-  }
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    _focusNode.dispose();
-    super.dispose();
   }
 
   void _showDropdownMenu(FormFieldState<T> fieldState) {
@@ -150,9 +147,7 @@ class _CustomDropdownState<T> extends State<CustomDropdown<T>> {
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppRadius.md),
-                    borderSide: BorderSide(
-                      color: colors.outlineVariant,
-                    ),
+                    borderSide: BorderSide(color: colors.outlineVariant),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppRadius.md),
@@ -238,153 +233,159 @@ class _DropdownBottomSheetState<T> extends State<_DropdownBottomSheet<T>> {
     final colors = widget.colorScheme;
     final textTheme = context.textTheme;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            margin: SpacingUtils.onlyTop(AppSpacings.hSm),
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: colors.onSurfaceVariant.withValues(alpha: 0.4),
-              borderRadius: BorderRadius.circular(AppRadius.sm),
-            ),
+    return Padding(
+      // The sheet is `isScrollControlled`, so it sits over the keyboard rather
+      // than above it. Without this the search field — the one thing that
+      // raises the keyboard — ends up behind it.
+      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+      child: Container(
+        decoration: BoxDecoration(
+          color: colors.surface,
+          borderRadius: const BorderRadius.vertical(
+            top: Radius.circular(AppRadius.lg),
           ),
-
-          Gap.hMd,
-
-          if (widget.type == CustomDropdownType.searchable) ...[
-            Padding(
-              padding: SpacingUtils.horizontal(AppSpacings.wMd),
-              child: TextField(
-                controller: _searchController,
-                onChanged: (value) {
-                  setState(() {
-                    _searchQuery = value;
-                  });
-                },
-                decoration: InputDecoration(
-                  hintText: widget.searchHint,
-                  hintStyle: textTheme.bodyMedium?.copyWith(
-                    color: colors.onSurfaceVariant.withValues(alpha: 0.6),
-                  ),
-                  prefixIcon: Icon(
-                    CustomDropdownConstants.search,
-                    color: colors.primary,
-                    size: AppSizes.iconMd,
-                  ),
-                  suffixIcon: _searchQuery.isNotEmpty
-                      ? IconButton(
-                          icon: Icon(
-                            CustomDropdownConstants.clear,
-                            color: colors.onSurfaceVariant,
-                            size: AppSizes.iconMd,
-                          ),
-                          onPressed: () {
-                            _searchController.clear();
-                            setState(() {
-                              _searchQuery = '';
-                            });
-                          },
-                        )
-                      : null,
-                  filled: true,
-                  fillColor: colors.surfaceContainerHighest,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.md),
-                    borderSide: BorderSide.none,
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.md),
-                    borderSide: BorderSide(
-                      color: colors.outlineVariant,
-                    ),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.md),
-                    borderSide: BorderSide(
-                      color: colors.primary,
-                      width: AppBorders.normal,
-                    ),
-                  ),
-                  contentPadding:
-                      SpacingUtils.horizontal(AppSpacings.wMd) +
-                      SpacingUtils.vertical(AppSpacings.hSm),
-                ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              margin: SpacingUtils.onlyTop(AppSpacings.hSm),
+              width: AppSizes.handleWidth,
+              height: AppSizes.handleHeight,
+              decoration: BoxDecoration(
+                color: colors.onSurfaceVariant.withValues(alpha: 0.4),
+                borderRadius: BorderRadius.circular(AppRadius.sm),
               ),
             ),
-            Gap.hMd,
-          ],
 
-          Flexible(
-            child: _filteredItems.isEmpty
-                ? SizedBox(
-                    width: double.infinity,
-                    child: Padding(
-                      padding: SpacingUtils.all(AppSpacings.wLg),
-                      child: Text(
-                        widget.noResultsText,
-                        style: textTheme.bodyMedium?.copyWith(
-                          color: colors.onSurfaceVariant,
-                        ),
-                        textAlign: TextAlign.center,
+            Gap.hMd,
+
+            if (widget.type == CustomDropdownType.searchable) ...[
+              Padding(
+                padding: SpacingUtils.horizontal(AppSpacings.wMd),
+                child: TextField(
+                  controller: _searchController,
+                  onChanged: (value) {
+                    setState(() {
+                      _searchQuery = value;
+                    });
+                  },
+                  decoration: InputDecoration(
+                    hintText: widget.searchHint,
+                    hintStyle: textTheme.bodyMedium?.copyWith(
+                      color: colors.onSurfaceVariant.withValues(alpha: 0.6),
+                    ),
+                    prefixIcon: Icon(
+                      CustomDropdownConstants.search,
+                      color: colors.primary,
+                      size: AppSizes.iconMd,
+                    ),
+                    suffixIcon: _searchQuery.isNotEmpty
+                        ? IconButton(
+                            icon: Icon(
+                              CustomDropdownConstants.clear,
+                              color: colors.onSurfaceVariant,
+                              size: AppSizes.iconMd,
+                            ),
+                            onPressed: () {
+                              _searchController.clear();
+                              setState(() {
+                                _searchQuery = '';
+                              });
+                            },
+                          )
+                        : null,
+                    filled: true,
+                    fillColor: colors.surfaceContainerHighest,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppRadius.md),
+                      borderSide: BorderSide.none,
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppRadius.md),
+                      borderSide: BorderSide(color: colors.outlineVariant),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppRadius.md),
+                      borderSide: BorderSide(
+                        color: colors.primary,
+                        width: AppBorders.normal,
                       ),
                     ),
-                  )
-                : ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: _filteredItems.length,
-                    padding: SpacingUtils.onlyBottom(AppSpacings.hLg),
-                    itemBuilder: (context, index) {
-                      final item = _filteredItems[index];
-                      final isSelected = item == widget.selectedValue;
+                    contentPadding:
+                        SpacingUtils.horizontal(AppSpacings.wMd) +
+                        SpacingUtils.vertical(AppSpacings.hSm),
+                  ),
+                ),
+              ),
+              Gap.hMd,
+            ],
 
-                      return InkWell(
-                        onTap: () {
-                          widget.onChanged(item);
-                          Navigator.pop(context);
-                        },
-                        child: Container(
-                          padding:
-                              SpacingUtils.horizontal(AppSpacings.wMd) +
-                              SpacingUtils.vertical(AppSpacings.hSm),
-                          color: isSelected
-                              ? colors.primaryContainer.withValues(alpha: 0.3)
-                              : null,
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  widget.itemLabel(item),
-                                  style: textTheme.bodyLarge?.copyWith(
-                                    color: isSelected
-                                        ? colors.primary
-                                        : colors.onSurface,
-                                    fontWeight: isSelected
-                                        ? FontWeight.w600
-                                        : FontWeight.normal,
+            Flexible(
+              child: _filteredItems.isEmpty
+                  ? SizedBox(
+                      width: double.infinity,
+                      child: Padding(
+                        padding: SpacingUtils.all(AppSpacings.wLg),
+                        child: Text(
+                          widget.noResultsText,
+                          style: textTheme.bodyMedium?.copyWith(
+                            color: colors.onSurfaceVariant,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    )
+                  : ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: _filteredItems.length,
+                      padding: SpacingUtils.onlyBottom(AppSpacings.hLg),
+                      itemBuilder: (context, index) {
+                        final item = _filteredItems[index];
+                        final isSelected = item == widget.selectedValue;
+
+                        return InkWell(
+                          onTap: () {
+                            widget.onChanged(item);
+                            Navigator.pop(context);
+                          },
+                          child: Container(
+                            padding:
+                                SpacingUtils.horizontal(AppSpacings.wMd) +
+                                SpacingUtils.vertical(AppSpacings.hSm),
+                            color: isSelected
+                                ? colors.primaryContainer.withValues(alpha: 0.3)
+                                : null,
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    widget.itemLabel(item),
+                                    style: textTheme.bodyLarge?.copyWith(
+                                      color: isSelected
+                                          ? colors.primary
+                                          : colors.onSurface,
+                                      fontWeight: isSelected
+                                          ? FontWeight.w600
+                                          : FontWeight.normal,
+                                    ),
                                   ),
                                 ),
-                              ),
-                              if (isSelected)
-                                Icon(
-                                  Icons.check,
-                                  color: colors.primary,
-                                  size: AppSizes.iconMd,
-                                ),
-                            ],
+                                if (isSelected)
+                                  Icon(
+                                    Icons.check,
+                                    color: colors.primary,
+                                    size: AppSizes.iconMd,
+                                  ),
+                              ],
+                            ),
                           ),
-                        ),
-                      );
-                    },
-                  ),
-          ),
-        ],
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -439,7 +440,7 @@ class _CustomMultiSelectDropdownState<T>
     _selectedValues = List.from(widget.initialValues);
   }
 
-  void _showMultiSelectMenu() {
+  void _showMultiSelectMenu(FormFieldState<List<T>> fieldState) {
     final colors = context.colorScheme;
 
     showModalBottomSheet(
@@ -454,6 +455,12 @@ class _CustomMultiSelectDropdownState<T>
           setState(() {
             _selectedValues = values;
           });
+
+          // Without this the FormField never sees a value: validator() kept
+          // being handed null, so a "pick at least one" rule failed no matter
+          // what the user selected.
+          fieldState.didChange(values);
+
           widget.onChanged?.call(values);
         },
         colorScheme: colors,
@@ -480,73 +487,77 @@ class _CustomMultiSelectDropdownState<T>
     final TextTheme textTheme = context.textTheme;
 
     return FormField<List<T>>(
+      // Seeded so a validator run before the user opens the sheet sees the
+      // values the widget was built with, not null.
+      initialValue: _selectedValues,
       validator: widget.validator,
       builder: (fieldState) {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            InputDecorator(
-              decoration: InputDecoration(
-                labelText: widget.hintText,
-                hintText: widget.hintText,
-                hintStyle: textTheme.bodyMedium?.copyWith(
-                  color: colors.onSurfaceVariant.withValues(alpha: 0.6),
-                ),
-                prefixIcon: widget.icon == null
-                    ? null
-                    : Icon(
-                        widget.icon,
-                        size: AppSizes.iconMd,
-                        color: colors.primary,
-                      ),
-                suffixIcon: Icon(
-                  CustomDropdownConstants.dropdown,
-                  color: colors.onSurfaceVariant,
-                  size: AppSizes.iconMd,
-                ),
-                filled: true,
-                fillColor: widget.enabled
-                    ? colors.surfaceContainerHighest
-                    : colors.surfaceContainerHighest.withValues(alpha: 0.5),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppRadius.md),
-                  borderSide: BorderSide.none,
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppRadius.md),
-                  borderSide: BorderSide(
-                    color: colors.outlineVariant,
+            // InkWell outside the decorator, matching CustomDropdown: with it
+            // as the decorator's child only the label text opened the sheet,
+            // and tapping the dropdown arrow did nothing.
+            InkWell(
+              onTap: widget.enabled
+                  ? () => _showMultiSelectMenu(fieldState)
+                  : null,
+              borderRadius: BorderRadius.circular(AppRadius.md),
+              child: InputDecorator(
+                decoration: InputDecoration(
+                  labelText: widget.hintText,
+                  hintText: widget.hintText,
+                  hintStyle: textTheme.bodyMedium?.copyWith(
+                    color: colors.onSurfaceVariant.withValues(alpha: 0.6),
                   ),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppRadius.md),
-                  borderSide: BorderSide(
-                    color: colors.primary,
-                    width: AppBorders.normal,
+                  prefixIcon: widget.icon == null
+                      ? null
+                      : Icon(
+                          widget.icon,
+                          size: AppSizes.iconMd,
+                          color: colors.primary,
+                        ),
+                  suffixIcon: Icon(
+                    CustomDropdownConstants.dropdown,
+                    color: colors.onSurfaceVariant,
+                    size: AppSizes.iconMd,
                   ),
-                ),
-                errorBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppRadius.md),
-                  borderSide: BorderSide(
-                    color: colors.error,
+                  filled: true,
+                  fillColor: widget.enabled
+                      ? colors.surfaceContainerHighest
+                      : colors.surfaceContainerHighest.withValues(alpha: 0.5),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                    borderSide: BorderSide.none,
                   ),
-                ),
-                focusedErrorBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppRadius.md),
-                  borderSide: BorderSide(
-                    color: colors.error,
-                    width: AppBorders.normal,
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                    borderSide: BorderSide(color: colors.outlineVariant),
                   ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                    borderSide: BorderSide(
+                      color: colors.primary,
+                      width: AppBorders.normal,
+                    ),
+                  ),
+                  errorBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                    borderSide: BorderSide(color: colors.error),
+                  ),
+                  focusedErrorBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                    borderSide: BorderSide(
+                      color: colors.error,
+                      width: AppBorders.normal,
+                    ),
+                  ),
+                  contentPadding:
+                      SpacingUtils.horizontal(AppSpacings.wMd) +
+                      SpacingUtils.vertical(AppSpacings.hSm),
+                  errorText: fieldState.hasError ? fieldState.errorText : null,
                 ),
-                contentPadding:
-                    SpacingUtils.horizontal(AppSpacings.wMd) +
-                    SpacingUtils.vertical(AppSpacings.hSm),
-                errorText: fieldState.hasError ? fieldState.errorText : null,
-              ),
-              isEmpty: _selectedValues.isEmpty,
-              child: InkWell(
-                onTap: widget.enabled ? _showMultiSelectMenu : null,
-                borderRadius: BorderRadius.circular(AppRadius.md),
+                isEmpty: _selectedValues.isEmpty,
                 child: Text(
                   _displayText,
                   style: textTheme.bodyLarge?.copyWith(
@@ -629,99 +640,110 @@ class _MultiSelectBottomSheetState<T>
     final colors = widget.colorScheme;
     final textTheme = context.textTheme;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            margin: SpacingUtils.onlyTop(AppSpacings.hSm),
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: colors.onSurfaceVariant.withValues(alpha: 0.4),
-              borderRadius: BorderRadius.circular(AppRadius.sm),
-            ),
+    return Padding(
+      // Same reason as the single-select sheet: `isScrollControlled` puts the
+      // sheet over the keyboard, so the confirm button at the bottom would sit
+      // behind it.
+      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+      child: Container(
+        decoration: BoxDecoration(
+          color: colors.surface,
+          borderRadius: const BorderRadius.vertical(
+            top: Radius.circular(AppRadius.lg),
           ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              margin: SpacingUtils.onlyTop(AppSpacings.hSm),
+              width: AppSizes.handleWidth,
+              height: AppSizes.handleHeight,
+              decoration: BoxDecoration(
+                color: colors.onSurfaceVariant.withValues(alpha: 0.4),
+                borderRadius: BorderRadius.circular(AppRadius.sm),
+              ),
+            ),
 
-          Gap.hMd,
+            Gap.hMd,
 
-          Padding(
-            padding: SpacingUtils.horizontal(AppSpacings.wMd),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  '${_tempSelected.length} ${widget.selectedCountSuffix}',
-                  style: textTheme.titleMedium,
-                ),
-                if (_tempSelected.isNotEmpty)
-                  TextButton(
-                    onPressed: () {
-                      setState(() {
-                        _tempSelected.clear();
-                      });
-                    },
-                    child: Text(widget.clearLabel),
+            Padding(
+              padding: SpacingUtils.horizontal(AppSpacings.wMd),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    '${_tempSelected.length} ${widget.selectedCountSuffix}',
+                    style: textTheme.titleMedium,
                   ),
-              ],
+                  if (_tempSelected.isNotEmpty)
+                    TextButton(
+                      onPressed: () {
+                        setState(() {
+                          _tempSelected.clear();
+                        });
+                      },
+                      child: Text(widget.clearLabel),
+                    ),
+                ],
+              ),
             ),
-          ),
 
-          Gap.hSm,
-          Flexible(
-            child: ListView.builder(
-              shrinkWrap: true,
-              itemCount: widget.items.length,
-              padding: SpacingUtils.onlyBottom(AppSpacings.hLg),
-              itemBuilder: (context, index) {
-                final item = widget.items[index];
-                final isSelected = _tempSelected.contains(item);
+            Gap.hSm,
+            Flexible(
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: widget.items.length,
+                padding: SpacingUtils.onlyBottom(AppSpacings.hLg),
+                itemBuilder: (context, index) {
+                  final item = widget.items[index];
+                  final isSelected = _tempSelected.contains(item);
 
-                return InkWell(
-                  onTap: () => _toggleSelection(item),
-                  child: Container(
-                    padding:
-                        SpacingUtils.horizontal(AppSpacings.wMd) +
-                        SpacingUtils.vertical(AppSpacings.hSm),
-                    child: Row(
-                      children: [
-                        Checkbox(
-                          value: isSelected,
-                          onChanged: (_) => _toggleSelection(item),
-                          activeColor: colors.primary,
-                        ),
-                        Gap.hSm,
-                        Expanded(
-                          child: Text(
-                            widget.itemLabel(item),
-                            style: textTheme.bodyLarge?.copyWith(
-                              color: colors.onSurface,
+                  return InkWell(
+                    onTap: () => _toggleSelection(item),
+                    child: Container(
+                      padding:
+                          SpacingUtils.horizontal(AppSpacings.wMd) +
+                          SpacingUtils.vertical(AppSpacings.hSm),
+                      child: Row(
+                        children: [
+                          Checkbox(
+                            value: isSelected,
+                            onChanged: (_) => _toggleSelection(item),
+                            activeColor: colors.primary,
+                          ),
+                          Gap.hSm,
+                          Expanded(
+                            child: Text(
+                              widget.itemLabel(item),
+                              style: textTheme.bodyLarge?.copyWith(
+                                color: colors.onSurface,
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
-          ),
 
-          Padding(
-            padding: SpacingUtils.all(AppSpacings.wMd),
-            child: CustomButton(
-              text: widget.confirmLabel,
-              onPressed: () {
-                widget.onChanged(_tempSelected);
-                Navigator.pop(context);
-              },
+            Padding(
+              padding: SpacingUtils.all(AppSpacings.wMd),
+              child: CustomButton(
+                text: widget.confirmLabel,
+                onPressed: () {
+                  // A copy: _tempSelected keeps being mutated by this sheet, so
+                  // handing the caller the live list would let a later tap edit
+                  // what it already stored.
+                  widget.onChanged(List<T>.from(_tempSelected));
+                  Navigator.pop(context);
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

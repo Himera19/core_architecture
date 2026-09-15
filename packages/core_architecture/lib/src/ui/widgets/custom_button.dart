@@ -4,7 +4,6 @@ import '../tokens/app_borders.dart';
 import '../tokens/app_radius.dart';
 import '../tokens/app_sizes.dart';
 import '../tokens/app_spacings.dart';
-import '../tokens/app_typography.dart';
 import '../../utils/extensions/context_extensions.dart';
 import '../../utils/spacing_utils.dart';
 import '../../utils/spin_kit_indicator.dart';
@@ -88,9 +87,10 @@ class CustomButton extends StatelessWidget {
     // Get the button style to use the correct foreground color
     final _ButtonStyles buttonStyle = _resolveStyle(type, colors);
 
+    // No fontFamily here: labelLarge already carries the theme font, and
+    // stamping one would override AppTheme(fontFamily: ...).
     final TextStyle? style = textTheme.labelLarge?.copyWith(
       color: buttonStyle.foreground,
-      fontFamily: AppTypography.fontFamily,
     );
 
     if (icon != null) {

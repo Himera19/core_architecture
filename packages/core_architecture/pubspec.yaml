@@ -1,6 +1,6 @@
 name: core_architecture
 description: Backend-agnostic core architecture for Flutter projects — design system, theming, responsive layer, storage, logging and shared providers.
-version: 3.2.0
+version: 4.0.0
 publish_to: 'none'
 resolution: workspace
 

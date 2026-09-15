@@ -64,7 +64,6 @@ export 'src/ui/widgets/custom_dropdown.dart';
 export 'src/utils/border_utils.dart';
 export 'src/utils/date_helper.dart';
 export 'src/utils/gap_utils.dart';
-export 'src/utils/input_formatters.dart';
 export 'src/utils/radius_utils.dart';
 export 'src/utils/spacing_utils.dart';
 export 'src/utils/spin_kit_indicator.dart';

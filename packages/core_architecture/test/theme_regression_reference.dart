@@ -2,6 +2,12 @@
 // before the AppTheme refactor. The test asserts the new single-factory build
 // produces exactly these ThemeData objects.
 //
+// One deliberate deviation from that pinned copy: the `fontFamily:
+// AppTypography.fontFamily` lines are gone. The placeholder family they named
+// did not exist, so it resolved to the platform default anyway — while
+// silently overriding any family the app passed to AppTheme. Leaving the slot
+// unset is the fix, so the reference drops it too.
+//
 // ignore_for_file: prefer_const_constructors, avoid_redundant_argument_values
 
 import 'package:flutter/material.dart';
@@ -40,10 +46,8 @@ ThemeData oldLightTheme() => ThemeData(
   brightness: Brightness.light,
   colorScheme: oldLightColorScheme,
 
-  fontFamily: AppTypography.fontFamily,
 
   textTheme: Typography.material2021().black.apply(
-    fontFamily: AppTypography.fontFamily,
     bodyColor: AppColors.textPrimaryLight,
     displayColor: AppColors.textPrimaryLight,
   ),
@@ -146,10 +150,8 @@ ThemeData oldDarkTheme() => ThemeData(
   brightness: Brightness.dark,
   colorScheme: oldDarkColorScheme,
 
-  fontFamily: AppTypography.fontFamily,
 
   textTheme: Typography.material2021().white.apply(
-    fontFamily: AppTypography.fontFamily,
     bodyColor: AppColors.textPrimaryDark,
     displayColor: AppColors.textPrimaryDark,
   ),
