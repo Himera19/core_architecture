@@ -319,6 +319,8 @@ tag is pushed, consumers outside the repo cannot resolve the backend packages.
 * [`packages/core_architecture_supabase/README.md`](packages/core_architecture_supabase/README.md) — Supabase setup, auth, CRUD
 * [`packages/core_architecture_dio/README.md`](packages/core_architecture_dio/README.md) — REST setup, interceptors, CRUD
 
+Each package keeps its own `CHANGELOG.md`; `melos version` appends to them.
+
 ---
 
 ## Error handling
