@@ -66,7 +66,6 @@ export 'src/utils/date_helper.dart';
 export 'src/utils/gap_utils.dart';
 export 'src/utils/radius_utils.dart';
 export 'src/utils/spacing_utils.dart';
-export 'src/utils/spin_kit_indicator.dart';
 export 'src/utils/url_launcher.dart';
 export 'src/utils/validators.dart';
 

@@ -6,7 +6,6 @@ import '../tokens/app_sizes.dart';
 import '../tokens/app_spacings.dart';
 import '../../utils/extensions/context_extensions.dart';
 import '../../utils/spacing_utils.dart';
-import '../../utils/spin_kit_indicator.dart';
 
 /// Button visual styles
 enum ButtonType { primary, secondary, outlined, danger }
@@ -23,6 +22,25 @@ class CustomButton extends StatelessWidget {
   final bool isLoading;
   final IconData? icon;
 
+  /// Shown in place of the label while [isLoading].
+  ///
+  /// Defaults to a [CircularProgressIndicator] tinted to this button's own
+  /// foreground. The package deliberately ships no animation library, so an
+  /// app that wants a different spinner — flutter_spinkit, Lottie, a brand
+  /// animation — passes it here and keeps that dependency to itself:
+  ///
+  /// ```dart
+  /// CustomButton(
+  ///   text: 'Save',
+  ///   isLoading: saving,
+  ///   loadingIndicator: SpinKitPulse(color: Colors.white, size: 24),
+  ///   onPressed: save,
+  /// );
+  /// ```
+  ///
+  /// Give it a bounded size: the button is only as tall as its [size].
+  final Widget? loadingIndicator;
+
   const CustomButton({
     super.key,
     required this.text,
@@ -31,6 +49,7 @@ class CustomButton extends StatelessWidget {
     this.size = ButtonSize.medium,
     this.isLoading = false,
     this.icon,
+    this.loadingIndicator,
   });
 
   @override
@@ -80,12 +99,23 @@ class CustomButton extends StatelessWidget {
     ColorScheme colors,
     BuildContext context,
   ) {
-    if (isLoading) {
-      return SpinKitIndicator.onPrimaryColored(context, size: AppSpacings.hLg);
-    }
-
     // Get the button style to use the correct foreground color
     final _ButtonStyles buttonStyle = _resolveStyle(type, colors);
+
+    if (isLoading) {
+      return loadingIndicator ??
+          SizedBox(
+            height: AppSizes.iconMd,
+            width: AppSizes.iconMd,
+            child: CircularProgressIndicator(
+              strokeWidth: AppBorders.normal,
+              // The button's own foreground, not onPrimary: an outlined
+              // button has a transparent background, where an onPrimary
+              // spinner is white on white.
+              color: buttonStyle.foreground,
+            ),
+          );
+    }
 
     // No fontFamily here: labelLarge already carries the theme font, and
     // stamping one would override AppTheme(fontFamily: ...).
@@ -99,12 +129,27 @@ class CustomButton extends StatelessWidget {
         children: [
           Icon(icon, size: AppSizes.iconSm, color: style?.color),
           const SizedBox(width: AppSpacings.wSm),
-          Text(text, style: style),
+          // Flexible, and ellipsized: the button is full width, but a label
+          // longer than that width has nothing to give in a `mainAxisSize.min`
+          // Row, so it overflowed the button instead of being trimmed.
+          Flexible(
+            child: Text(
+              text,
+              style: style,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
         ],
       );
     }
 
-    return Text(text, style: style);
+    return Text(
+      text,
+      style: style,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+    );
   }
 
   // ---------------------------------------------------------------------------
