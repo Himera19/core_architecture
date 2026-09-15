@@ -19,7 +19,7 @@ dependencies:
     git:
       url: https://github.com/Himera19/core_architecture.git
       path: packages/core_architecture
-      ref: v3.0.0
+      ref: v3.1.0
 ```
 
 ```dart

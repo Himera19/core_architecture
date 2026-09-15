@@ -3,7 +3,7 @@
 A production-ready, modular Flutter architecture built on **Riverpod 3**, split into a
 backend-agnostic core plus optional backend packages.
 
-**Version:** 3.0.0 · **Status:** Active development · **License:** MIT
+**Version:** 3.1.0 · **Status:** Active development · **License:** MIT
 
 > **Why the split?** In v1 everything shipped as one package, so every consumer pulled in
 > `supabase_flutter`, `dio` and `purchases_flutter` whether they used them or not. In v2 you
@@ -101,7 +101,7 @@ dependencies:
     git:
       url: https://github.com/Himera19/core_architecture.git
       path: packages/core_architecture
-      ref: v3.0.0
+      ref: v3.1.0
 ```
 
 ```dart
@@ -119,7 +119,7 @@ dependencies:
     git:
       url: https://github.com/Himera19/core_architecture.git
       path: packages/core_architecture_supabase
-      ref: v3.0.0
+      ref: v3.1.0
 ```
 
 ```dart
@@ -134,7 +134,7 @@ dependencies:
     git:
       url: https://github.com/Himera19/core_architecture.git
       path: packages/core_architecture_dio
-      ref: v3.0.0
+      ref: v3.1.0
 ```
 
 ```dart

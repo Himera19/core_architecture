@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.1.0
+
+Version bump to track `core_architecture` 3.1.0. This package's own API is unchanged. The core it
+re-exports gains `AppTheme.light()` / `AppTheme.dark()` for re-branding the design system, and the
+dark brand colors are now named tokens on `AppColors`.
+
 ## 3.0.0
 
 Version bump to track `core_architecture` 3.0.0. This package's own API is unchanged, but the
