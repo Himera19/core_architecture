@@ -4,7 +4,9 @@ Modular Flutter architecture on **Riverpod 3**: a backend-agnostic core plus opt
 packages. Design tokens, themes, responsive layout, storage, logging and a typed error hierarchy —
 versioned as a dependency instead of copy-pasted into every new `lib/core/`.
 
-**v3.2.0** · MIT · Flutter ≥ 3.16 · Dart ≥ 3.8
+**v5.1.1** · MIT · Flutter ≥ 3.16 · Dart ≥ 3.8
+
+**[▶ Live demo](https://himera19.github.io/core_architecture/)** — every feature of `core_architecture` running in the browser.
 
 ```dart
 class ProductRepository {
@@ -30,6 +32,7 @@ No router, no navigation widgets, no in-app purchases — bring your own.
 | [`core_architecture`](packages/core_architecture) | Design tokens, themes, responsive layer, widgets, storage, logging, `Failure`/`AppException`, theme & onboarding providers, `CrudContract` | — |
 | [`core_architecture_supabase`](packages/core_architecture_supabase) | `SupabaseService`, `SupabaseCrudClient`, auth providers | core + `supabase_flutter` |
 | [`core_architecture_dio`](packages/core_architecture_dio) | `DioService`, `DioCrudClient`, providers | core + `dio` |
+| [`example`](example) | The demo app behind the live link above — every exported feature, running | core |
 
 Take the core alone, or add one backend package — or both, if the app talks to Supabase *and* a
 REST API. Each backend package re-exports the core, so one import is enough.
@@ -47,7 +50,7 @@ dependencies:
     git:
       url: https://github.com/Himera19/core_architecture.git
       path: packages/core_architecture_supabase
-      ref: v3.2.0
+      ref: v5.1.1
 ```
 
 | Package | `path:` | Import |
