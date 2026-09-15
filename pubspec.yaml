@@ -11,6 +11,7 @@ workspace:
   - packages/core_architecture
   - packages/core_architecture_supabase
   - packages/core_architecture_dio
+  - example
 
 dev_dependencies:
   melos: ^8.7.0
@@ -23,6 +24,7 @@ melos:
 
   packages:
     - packages/*
+    - example
 
   command:
     version:

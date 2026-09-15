@@ -85,6 +85,52 @@ void main() {
     });
   });
 
+  group('every mode survives a restart', () {
+    // setThemeMode persists `mode.name`, so the reader has to understand every
+    // name it can write. It only knew "light" and "dark": choosing "system"
+    // was written out and then quietly dropped on the next launch.
+    for (final ThemeMode mode in ThemeMode.values) {
+      test(mode.name, () async {
+        final _FakeStorage storage = _FakeStorage();
+
+        final ProviderContainer first = ProviderContainer(
+          overrides: [storageServiceProvider.overrideWithValue(storage)],
+        );
+        first.listen(themeProvider, (_, _) {}, fireImmediately: true);
+        await first.read(themeProvider.notifier).setThemeMode(mode);
+        first.dispose();
+
+        expect(await storage.read(key: StorageConstants.themeMode), mode.name);
+
+        // A fresh container is what a restart looks like to the provider.
+        final ProviderContainer second = ProviderContainer(
+          overrides: [storageServiceProvider.overrideWithValue(storage)],
+        );
+        addTearDown(second.dispose);
+        second.listen(themeProvider, (_, _) {}, fireImmediately: true);
+        await Future<void>.delayed(Duration.zero);
+
+        expect(second.read(themeProvider), mode);
+      });
+    }
+
+    test('a value nothing recognises leaves the default alone', () async {
+      final ProviderContainer container = ProviderContainer(
+        overrides: [
+          storageServiceProvider.overrideWithValue(
+            _FakeStorage({StorageConstants.themeMode: 'chartreuse'}),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      container.listen(themeProvider, (_, _) {}, fireImmediately: true);
+      await Future<void>.delayed(Duration.zero);
+
+      expect(container.read(themeProvider), ThemeMode.light);
+    });
+  });
+
   group('a user choice outlives a slow storage read', () {
     test('toggling before the load lands is not reverted', () async {
       final container = ProviderContainer(

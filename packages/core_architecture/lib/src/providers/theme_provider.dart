@@ -64,11 +64,17 @@ class ThemeNotifier extends _$ThemeNotifier {
         return;
       }
 
-      if (stored == 'light') {
-        state = ThemeMode.light;
-      } else if (stored == 'dark') {
-        state = ThemeMode.dark;
+      // Matched against every ThemeMode, not just light and dark.
+      // [setThemeMode] persists `mode.name`, so picking "system" wrote
+      // "system" — which neither branch recognised, and the app came back up
+      // in light with the choice silently dropped.
+      for (final ThemeMode mode in ThemeMode.values) {
+        if (mode.name == stored) {
+          state = mode;
+          break;
+        }
       }
+
       _logger.i('Theme loaded: ${state.name}', tag: 'Theme');
     } catch (e, st) {
       _logger.e('Theme load failed', error: e, stackTrace: st, tag: 'Theme');
