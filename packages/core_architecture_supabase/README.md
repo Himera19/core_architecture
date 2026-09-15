@@ -1,16 +1,18 @@
 # core_architecture_supabase
 
-Supabase backend for [`core_architecture`](../core_architecture).
+Supabase backend for [`core_architecture`](../core_architecture): `SupabaseService`,
+`SupabaseCrudClient` (a `CrudContract` implementation), Riverpod auth providers and a standalone
+initializer.
 
-Adds `SupabaseService`, `SupabaseCrudClient` (a `CrudContract` implementation), Riverpod auth
-providers, and a standalone initializer. Depends on and **re-exports** `core_architecture`, so a
-single import gives you everything.
+Depends on and **re-exports** `core_architecture` plus all of `supabase_flutter` (`User`,
+`AuthState`, `AuthException`, `PostgrestException`, `StorageException`, …), so one import covers
+everything.
 
 ---
 
-## Installation
+## Install
 
-You do not need to list `core_architecture` separately.
+Do not list `core_architecture` separately — this package brings it in.
 
 ```yaml
 dependencies:
@@ -25,13 +27,6 @@ dependencies:
 import 'package:core_architecture_supabase/core_architecture_supabase.dart';
 ```
 
-The barrel re-exports `core_architecture`, all of `supabase_flutter` (giving you `User`,
-`AuthState`, `AuthException`, `PostgrestException`, `StorageException`, …) and this package's
-own types. Nothing is hidden: `core_architecture` deliberately avoids the SDK's type names, so
-`on AuthException` in your code always means what the SDK throws.
-
----
-
 ## Environment
 
 ```yaml
@@ -41,41 +36,23 @@ flutter:
     - .env
 ```
 
-```bash
-# .env — add to .gitignore!
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_PUBLISHABLE_KEY=your-publishable-key
-```
-
 | Variable | Required | Notes |
 | --- | --- | --- |
 | `SUPABASE_URL` | yes | Project URL from the Supabase dashboard |
 | `SUPABASE_PUBLISHABLE_KEY` | yes | Passed to `Supabase.initialize(publishableKey: …)` |
-| `SUPABASE_ANON_KEY` | — | Legacy name for the same key. Used as a fallback when `SUPABASE_PUBLISHABLE_KEY` is absent, so existing `.env` files keep working. |
-
----
+| `SUPABASE_ANON_KEY` | — | Legacy name, used as a fallback so existing `.env` files keep working |
 
 ## Setup
 
-`SupabaseCoreExtension.initialize()` is standalone: it ensures the Flutter binding and loads
-`.env` itself, so it can be the only call in `main()`.
+`SupabaseCoreExtension.initialize()` is standalone — it ensures the Flutter binding and loads
+`.env` itself, so it can be the only call in `main()`. Both steps are idempotent, so it also
+composes with `CoreInitializer`:
 
 ```dart
 void main() async {
+  await CoreInitializer.initialize(const CoreConfig(appName: 'MyApp'));   // optional
   await SupabaseCoreExtension.initialize();
-  runApp(const ProviderScope(child: MyApp()));
-}
-```
 
-Both steps are idempotent, so it composes cleanly with `CoreInitializer` when you also want the
-core's startup logging:
-
-```dart
-void main() async {
-  await CoreInitializer.initialize(const CoreConfig(appName: 'MyApp'));
-  await SupabaseCoreExtension.initialize(
-    deleteUserRpcName: 'delete_user', // optional, this is the default
-  );
   runApp(const ProviderScope(child: MyApp()));
 }
 ```
@@ -85,14 +62,13 @@ void main() async {
 | `deleteUserRpcName` | `'delete_user'` | Postgres RPC invoked by `deleteAccount()` |
 | `envFile` | `'.env'` | Only loaded if dotenv is not already initialized |
 
-`SupabaseService.initialize()` remains available if you want to skip the wrapper entirely.
+`SupabaseService.initialize()` is still there if you want to skip the wrapper.
 
 ---
 
-## Authentication
+## Auth
 
-Session persistence is handled by the Supabase SDK — never write auth tokens to storage
-manually.
+Session persistence is handled by the Supabase SDK — never write auth tokens to storage manually.
 
 ```dart
 final auth = ref.read(supabaseAuthProvider.notifier);
@@ -108,14 +84,12 @@ await auth.signOut();
 await auth.resetPassword('user@email.com');
 await auth.updateMetadata({'avatar_url': 'https://…'});
 await auth.verifyOtp(email: '…', token: '123456', newPassword: '…');
-await auth.deleteAccount(); // calls the configured RPC — irreversible
+await auth.deleteAccount();   // calls the configured RPC — irreversible
 ```
 
-Read the current user, or watch raw auth events:
-
 ```dart
-final user = ref.watch(supabaseAuthProvider);              // User?
-final events = ref.watch(authStateStreamProvider);          // AsyncValue<AuthState>
+final user   = ref.watch(supabaseAuthProvider);      // User?
+final events = ref.watch(authStateStreamProvider);   // AsyncValue<AuthState>
 ```
 
 Auth errors are rethrown raw — the consumer owns the display message:
@@ -128,10 +102,17 @@ try {
 }
 ```
 
-### Exception types
+### Which type you catch
 
-`SupabaseService` converts the SDK's errors into `core_architecture` failures, so the type you
-catch from its methods is `AuthFailure`, `DatabaseFailure` or `StorageFailure`:
+| Path | Throws |
+| --- | --- |
+| `SupabaseService` methods | `AuthFailure`, `DatabaseFailure`, `StorageFailure` |
+| `SupabaseCrudClient` | `DatabaseFailure`, carrying the Postgrest message and code |
+| The raw `client` | The SDK's own `AuthException`, `PostgrestException`, `StorageException` |
+
+`core_architecture` deliberately avoids the SDK's type names (its own are
+`AuthenticationException` / `LocalStorageException`), so an unprefixed `on AuthException` always
+means what the SDK throws. `test/exception_naming_test.dart` pins this down.
 
 ```dart
 try {
@@ -140,28 +121,6 @@ try {
   showError(f.message);
 }
 ```
-
-When you go through the **raw client** instead, you get the SDK's own exceptions — and this
-package does not shadow their names:
-
-```dart
-try {
-  await SupabaseService.instance.client.auth.signInWithPassword(
-    email: email,
-    password: password,
-  );
-} on AuthException catch (e) {        // the Supabase SDK's type
-  showError(e.message);
-} on PostgrestException catch (e) {
-  showError(e.message);
-}
-```
-
-> In v1 this did not work: the package exported core's `AuthException` under the same name, so
-> the clause compiled but never matched. Core's types are now `AuthenticationException` and
-> `LocalStorageException`.
-
-A regression test pins this down — see `test/exception_naming_test.dart`.
 
 ### `delete_user` RPC
 
@@ -183,7 +142,7 @@ $$;
 
 ## CRUD
 
-`SupabaseCrudClient` implements `CrudContract`, so repositories can stay backend-agnostic.
+`SupabaseCrudClient` implements `CrudContract`, so repositories stay backend-agnostic.
 
 ```dart
 @riverpod
@@ -207,8 +166,6 @@ class TodosNotifier extends _$TodosNotifier {
 Operations: `query`, `getById`, `insert`, `update`, `delete`, `upsert`, `batchInsert`,
 `batchUpdate`, `batchDelete`, `batchUpsert`, `exists`, `count`, `rpc`.
 
-Postgrest errors are converted to `DatabaseFailure`, carrying the original message and code.
-
 ---
 
 ## Providers
@@ -217,22 +174,18 @@ Postgrest errors are converted to `DatabaseFailure`, carrying the original messa
 | --- | --- |
 | `supabaseServiceProvider` | `SupabaseService` (keepAlive) |
 | `supabaseCrudClientProvider` | `SupabaseCrudClient` (keepAlive) |
+| `supabaseAuthProvider` | `User?` + the auth actions above (keepAlive) |
 | `authStateStreamProvider` | `Stream<AuthState>` |
-| `supabaseAuthProvider` | `User?` + auth actions (keepAlive) |
 
-All of them assume initialization already happened — reading them before
+All of them assume initialization already happened — reading one before
 `SupabaseCoreExtension.initialize()` completes throws.
-
----
 
 ## Direct client access
 
-For anything the service does not wrap:
-
 ```dart
-final client = ref.read(supabaseServiceProvider).client; // SupabaseClient
+final client = ref.read(supabaseServiceProvider).client;   // SupabaseClient
 await client.from('todos').select().textSearch('title', 'urgent');
 ```
 
-`SupabaseService` also covers storage directly: `uploadFile`, `downloadFile`, `deleteFile`,
+`SupabaseService` also wraps storage: `uploadFile`, `downloadFile`, `deleteFile`,
 `uploadToSupabase`, `getPublicUrl`, `getSignedUrl`.

@@ -1,17 +1,17 @@
 # core_architecture_dio
 
-Dio REST backend for [`core_architecture`](../core_architecture).
+Dio REST backend for [`core_architecture`](../core_architecture): `DioService` (a configured Dio
+instance with logging, auth-token and error interceptors), `DioCrudClient` (a `CrudContract`
+implementation), Riverpod providers and a standalone initializer.
 
-Adds `DioService` (a configured Dio instance with logging, auth-token and error interceptors),
-`DioCrudClient` (a `CrudContract` implementation), Riverpod providers, and a standalone
-initializer. Depends on and **re-exports** `core_architecture`, so a single import gives you
-everything.
+Depends on and **re-exports** `core_architecture` plus `dio` (`Dio`, `Response`, `DioException`,
+`Interceptor`, …), so one import covers everything.
 
 ---
 
-## Installation
+## Install
 
-You do not need to list `core_architecture` separately.
+Do not list `core_architecture` separately — this package brings it in.
 
 ```yaml
 dependencies:
@@ -26,11 +26,6 @@ dependencies:
 import 'package:core_architecture_dio/core_architecture_dio.dart';
 ```
 
-The barrel re-exports `core_architecture`, `dio` (giving you `Dio`, `Response`, `DioException`,
-`Interceptor`, …) and this package's own types.
-
----
-
 ## Environment
 
 ```yaml
@@ -41,34 +36,23 @@ flutter:
 ```
 
 ```bash
-# .env — add to .gitignore!
 API_BASE_URL=https://api.example.com
 ```
 
-`baseUrl` passed to the initializer wins; otherwise `API_BASE_URL` is read from `.env`. If
-neither is present, initialization throws `NetworkException`.
-
----
+The `baseUrl` passed to the initializer wins; otherwise `API_BASE_URL` is read from `.env`. With
+neither, initialization throws `NetworkException`.
 
 ## Setup
 
-`DioCoreExtension.initialize()` is standalone: it ensures the Flutter binding and loads `.env`
-itself, so it can be the only call in `main()`.
+`DioCoreExtension.initialize()` is standalone — it ensures the Flutter binding and loads `.env`
+itself, so it can be the only call in `main()`. Both steps are idempotent, so it also composes with
+`CoreInitializer`:
 
 ```dart
 void main() async {
-  await DioCoreExtension.initialize();
-  runApp(const ProviderScope(child: MyApp()));
-}
-```
-
-Both steps are idempotent, so it composes cleanly with `CoreInitializer` when you also want the
-core's startup logging:
-
-```dart
-void main() async {
-  await CoreInitializer.initialize(const CoreConfig(appName: 'MyApp'));
+  await CoreInitializer.initialize(const CoreConfig(appName: 'MyApp'));   // optional
   await DioCoreExtension.initialize(baseUrl: 'https://api.example.com');
+
   runApp(const ProviderScope(child: MyApp()));
 }
 ```
@@ -78,14 +62,14 @@ void main() async {
 | `baseUrl` | `API_BASE_URL` from `.env` | Base URL for every request |
 | `envFile` | `'.env'` | Only loaded if dotenv is not already initialized |
 
-`DioService.initialize()` remains available if you want to skip the wrapper entirely.
+`DioService.initialize()` is still there if you want to skip the wrapper.
 
 ---
 
 ## CRUD
 
-`DioCrudClient` implements `CrudContract`, so repositories can stay backend-agnostic — the same
-repository works against Supabase by swapping the injected client.
+`DioCrudClient` implements `CrudContract`, so the same repository works against Supabase by
+swapping the injected client.
 
 ```dart
 @riverpod
@@ -109,14 +93,14 @@ class TodosNotifier extends _$TodosNotifier {
 Operations: `query`, `getById`, `insert`, `update`, `delete`, `upsert`, `batchInsert`,
 `batchUpdate`, `batchDelete`, `batchUpsert`, `exists`, `count`, `rpc`.
 
-The `table` argument is used as the REST resource path, so `table: 'todos'` maps to
-`GET /todos`, `POST /todos`, `PUT /todos/{id}`, `DELETE /todos/{id}`, plus `/todos/batch`,
-`/todos/upsert` and `/rpc/{function}` for the batch, upsert and RPC operations.
+`table` is the REST resource path, so `table: 'todos'` maps to `GET /todos`, `POST /todos`,
+`PUT /todos/{id}`, `DELETE /todos/{id}`, plus `/todos/batch`, `/todos/upsert` and
+`/rpc/{function}`.
 
-### Exception types
+### Which type you catch
 
-`DioService` converts `DioException`s into `core_architecture` failures, so the type you catch
-from `DioCrudClient` is a `Failure`:
+`DioService` converts `DioException`s into `core_architecture` failures, so `DioCrudClient` throws
+a `Failure`:
 
 | Cause | Failure |
 | --- | --- |
@@ -126,9 +110,9 @@ from `DioCrudClient` is a `Failure`:
 | Connection error, cancellation | `NetworkFailure` |
 | Anything else | `UnknownFailure` |
 
-Going through the raw client gives you `DioException` directly. This package shadows no `dio` or
-`dart:async` type name, so `on DioException` and `on TimeoutException` both mean what you
-expect:
+The raw client gives you `DioException` directly. This package shadows no `dio` or `dart:async`
+type name, so both clauses below mean what you expect — core's own timeout type is
+`RequestTimeoutException`:
 
 ```dart
 try {
@@ -140,9 +124,6 @@ try {
 }
 ```
 
-Core's own timeout type is `RequestTimeoutException` — see
-[`core_architecture`](../core_architecture#errors).
-
 ---
 
 ## Providers
@@ -152,26 +133,18 @@ Core's own timeout type is `RequestTimeoutException` — see
 | `dioServiceProvider` | `DioService` (keepAlive) |
 | `dioCrudClientProvider` | `DioCrudClient` (keepAlive) |
 
-Both assume initialization already happened — reading them before
+Both assume initialization already happened — reading one before
 `DioCoreExtension.initialize()` completes throws.
-
----
 
 ## Direct client access
 
-For requests the CRUD contract does not cover:
-
 ```dart
-final dio = ref.read(dioServiceProvider).client; // Dio
+final dio = ref.read(dioServiceProvider).client;   // Dio
 
 final response = await dio.post('/auth/login', data: {
   'email': email,
   'password': password,
 });
-```
 
-Add your own interceptors on the same instance:
-
-```dart
-ref.read(dioServiceProvider).client.interceptors.add(MyInterceptor());
+dio.interceptors.add(MyInterceptor());   // your own interceptors go on the same instance
 ```
