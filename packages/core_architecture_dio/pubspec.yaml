@@ -1,0 +1,41 @@
+name: core_architecture_dio
+description: Dio REST backend for core_architecture — DioService, CrudContract implementation and providers.
+version: 2.0.0
+publish_to: 'none'
+resolution: workspace
+
+environment:
+  sdk: '>=3.8.0 <4.0.0'
+  flutter: '>=3.16.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Inside this workspace pub resolves core_architecture to packages/core_architecture.
+  # Outside it (git checkout), the git description below is used.
+  core_architecture:
+    git:
+      url: https://github.com/Himera19/core_architecture.git
+      path: packages/core_architecture
+      ref: v2.0.0
+
+  # Network
+  dio: ^5.4.1
+
+  # State Management
+  flutter_riverpod: ^3.0.3
+  riverpod_annotation: ^3.0.3
+
+  # Environment
+  flutter_dotenv: ^6.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  riverpod_generator: ^3.0.3
+  build_runner: ^2.4.13
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true

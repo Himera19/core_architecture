@@ -1,73 +1,103 @@
-# Core Architecture
+# Core Architecture — Monorepo
 
-A production-ready, modular Flutter architecture package built on **Riverpod 3** with pluggable backend support for **Supabase** and **Dio (REST API)**.
+A production-ready, modular Flutter architecture built on **Riverpod 3**, split into a
+backend-agnostic core plus optional backend packages.
 
-Drop it into any Flutter project as a local package, keep what you need, delete what you don't.
+**Version:** 2.0.0 · **Status:** Active development · **License:** MIT
 
-**Version:** 1.3.1 · **Status:** Active development · **License:** MIT
-
----
-
-## Table of Contents
-
-* [Features](#-features)
-* [Quick Start](#-quick-start)
-* [Architecture Overview](#-architecture-overview)
-* [Backend Selection](#-backend-selection)
-* [Core Layer](#-core-layer)
-* [UI Design System](#-ui-design-system)
-* [Utilities](#-utilities)
-* [Providers](#-providers)
-* [CRUD Operations](#-crud-operations)
-* [Authentication (Supabase)](#-authentication-supabase)
-* [Logging](#-logging)
-* [Adding a New Feature](#-adding-a-new-feature)
-* [Customization Guide](#-customization-guide)
-* [Optional Modules](#-optional-modules)
-* [Changelog](#-changelog)
-* [Troubleshooting](#-troubleshooting)
-* [Quick Reference](#-quick-reference)
+> **Why the split?** In v1 everything shipped as one package, so every consumer pulled in
+> `supabase_flutter`, `dio` and `purchases_flutter` whether they used them or not. In v2 you
+> depend only on what you actually use.
 
 ---
 
-## ✨ Features
+## Packages
 
-| Category | What's Included |
-| --- | --- |
-| **State Management** | Riverpod 3 with code generation |
-| **Backend** | Supabase & Dio (REST API) — pick one or both |
-| **UI System** | Design tokens, themes, responsive utilities, reusable widgets |
-| **Error Handling** | Extensible `Failure` / `AppException` hierarchy |
-| **Storage** | Encrypted key-value storage with centralized `StorageConstants` |
-| **Logging** | Production-aware logger with HTTP request/response tracking |
-| **Routing** | GoRouter integration with custom page transitions |
-| **Validation** | Email, phone, password, IBAN, credit card, and more — consumer-provided messages |
-| **In-App Purchases** | RevenueCat error handling (optional, removable) |
+| Package | Adds | Depends on |
+| --- | --- | --- |
+| [`core_architecture`](packages/core_architecture) | Design tokens, themes, responsive layer, shared widgets, storage, logging, `Failure`/`Exception` hierarchy, theme & onboarding providers, and the backend-agnostic `CrudContract` interface. **No backend dependency.** | — |
+| [`core_architecture_supabase`](packages/core_architecture_supabase) | `SupabaseService`, `SupabaseCrudClient` (a `CrudContract` implementation), auth providers, `SupabaseCoreExtension`. | `core_architecture`, `supabase_flutter` |
+| [`core_architecture_dio`](packages/core_architecture_dio) | `DioService`, `DioCrudClient` (a `CrudContract` implementation), providers, `DioCoreExtension`. | `core_architecture`, `dio` |
+
+Pick `core_architecture` alone, or add exactly one backend package — or both, if your app talks
+to Supabase *and* a REST API.
+
+```
+.
+├── pubspec.yaml                        # pub workspace root + Melos config
+├── analysis_options.yaml               # shared lint rules
+└── packages/
+    ├── core_architecture/              # backend-agnostic core
+    ├── core_architecture_supabase/     # core + supabase_flutter
+    └── core_architecture_dio/          # core + dio
+```
 
 ---
 
-## 🚀 Quick Start
+## Installation
 
-### 1. Add the Package
+All packages are consumed as **git dependencies**. Pin a tag with `ref` so your builds are
+reproducible.
+
+### Core only — no backend
 
 ```yaml
-# your_app/pubspec.yaml
 dependencies:
   core_architecture:
-    path: packages/core_architecture
+    git:
+      url: https://github.com/Himera19/core_architecture.git
+      path: packages/core_architecture
+      ref: v2.0.0
 ```
 
-### 2. Install Dependencies & Generate Code
-
-```bash
-cd packages/core_architecture
-flutter pub get
-flutter pub run build_runner build --delete-conflicting-outputs
-cd ../..
-flutter pub get
+```dart
+import 'package:core_architecture/core_architecture.dart';
 ```
 
-### 3. Configure Environment
+### With Supabase
+
+You do **not** need to list `core_architecture` separately — the backend package brings it in
+and re-exports it.
+
+```yaml
+dependencies:
+  core_architecture_supabase:
+    git:
+      url: https://github.com/Himera19/core_architecture.git
+      path: packages/core_architecture_supabase
+      ref: v2.0.0
+```
+
+```dart
+import 'package:core_architecture_supabase/core_architecture_supabase.dart';
+```
+
+### With Dio (REST API)
+
+```yaml
+dependencies:
+  core_architecture_dio:
+    git:
+      url: https://github.com/Himera19/core_architecture.git
+      path: packages/core_architecture_dio
+      ref: v2.0.0
+```
+
+```dart
+import 'package:core_architecture_dio/core_architecture_dio.dart';
+```
+
+### Using both backends
+
+List both packages. Import each barrel where you need it, or import
+`package:core_architecture/core_architecture.dart` for the shared pieces and the backend barrels
+only in the files that touch that backend.
+
+---
+
+## Quick Start
+
+### 1. Environment file
 
 ```yaml
 # your_app/pubspec.yaml
@@ -77,48 +107,69 @@ flutter:
 ```
 
 ```bash
-# .env (add to .gitignore!)
+# .env — add to .gitignore!
 SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_PUBLISHABLE_KEY=your-publishable-key   # SUPABASE_ANON_KEY still works
 
-# Or for REST API:
+# …or, for a REST API:
 API_BASE_URL=https://api.example.com
 ```
 
-### 4. Initialize in `main.dart`
+### 2. Initialize in `main.dart`
+
+`CoreInitializer` no longer knows about backends. Initialize the core, then each backend you use.
 
 ```dart
-import 'package:core_architecture/core_architecture.dart';
-import 'package:core_architecture/supabase.dart';
-// or: import 'package:core_architecture/dio.dart';
+import 'package:core_architecture_supabase/core_architecture_supabase.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-
-  // CoreInitializer now handles backend initialization automatically
   await CoreInitializer.initialize(
-    CoreConfig(
-      appName: 'MyApp',
-      useSupabase: true,
-      // deleteUserRpcName: 'delete_user', // optional, this is the default
-    ),
+    const CoreConfig(appName: 'MyApp', envFile: '.env'),
+  );
+
+  await SupabaseCoreExtension.initialize(
+    deleteUserRpcName: 'delete_user', // optional, this is the default
   );
 
   runApp(const ProviderScope(child: MyApp()));
 }
+```
 
+**No backend at all?** `quickStart` needs no config object:
+
+```dart
+import 'package:core_architecture/core_architecture.dart';
+
+void main() async {
+  await CoreInitializer.quickStart(); // binding + .env + storage + logger
+  runApp(const ProviderScope(child: MyApp()));
+}
+```
+
+**Backend only?** Each backend initializer is standalone — it sets up the Flutter binding and
+loads `.env` itself, so `CoreInitializer` is optional:
+
+```dart
+void main() async {
+  await SupabaseCoreExtension.initialize();
+  runApp(const ProviderScope(child: MyApp()));
+}
+```
+
+### 3. Wire up the app
+
+```dart
 class MyApp extends ConsumerWidget {
   const MyApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final themeMode = ref.watch(themeProvider);
     return MaterialApp.router(
       routerConfig: ref.read(routeConfigProvider),
       title: 'MyApp',
       theme: lightTheme,
       darkTheme: darkTheme,
-      themeMode: themeMode,
+      themeMode: ref.watch(themeProvider),
     );
   }
 }
@@ -126,130 +177,161 @@ class MyApp extends ConsumerWidget {
 
 ---
 
-## 🏗 Architecture Overview
+## Swapping backends
 
-```
-lib/
-├── core_architecture.dart     # Main barrel — core exports only
-├── dio.dart                   # Dio barrel — core + Dio backend
-├── supabase.dart              # Supabase barrel — core + Supabase backend
-└── src/
-    ├── backends/
-    │   ├── contracts/         # CrudContract interface
-    │   ├── dio/               # Dio service, CRUD client, providers
-    │   └── supabase/          # Supabase service, CRUD client, providers
-    ├── core/
-    │   ├── config/            # CoreInitializer, CoreConfig
-    │   ├── constants/         # StorageConstants and app-wide constants
-    │   ├── entities/          # BaseEntity (id, equality, copyWith, toString)
-    │   ├── errors/            # Failure & Exception hierarchy
-    │   └── logging/           # LoggerService
-    ├── providers/             # Theme & Onboarding state
-    ├── services/              # StorageService abstraction
-    ├── ui/
-    │   ├── themes/            # Light & dark ThemeData
-    │   ├── tokens/            # Colors, typography, spacings, etc.
-    │   └── widgets/           # Reusable widgets
-    └── utils/                 # Helpers, validators, extensions
-```
-
-### Import Strategy
+Feature code should depend on `CrudContract`, never on a concrete client. Both backend packages
+implement it, so switching backends is a provider change, not a rewrite.
 
 ```dart
-// Core only (no backend specifics)
-import 'package:core_architecture/core_architecture.dart';
+class ProductRepository {
+  ProductRepository(this._client);
+  final CrudContract _client;
 
-// Core + Supabase
-import 'package:core_architecture/supabase.dart';
+  Future<List<Product>> fetchAll() =>
+      _client.query(table: 'products', fromJson: Product.fromJson);
+}
 
-// Core + Dio (REST API)
-import 'package:core_architecture/dio.dart';
+// Supabase:
+ProductRepository(ref.watch(supabaseCrudClientProvider));
+// Dio:
+ProductRepository(ref.watch(dioCrudClientProvider));
 ```
 
-> Do not mix barrel imports. Use `supabase.dart` or `dio.dart` — each re-exports `core_architecture.dart` automatically.
+`CrudContract` operations: `query`, `getById`, `insert`, `update`, `delete`, `upsert`,
+`batchInsert`, `batchUpdate`, `batchDelete`, `batchUpsert`, `exists`, `count`, `rpc`.
 
 ---
 
-## 🔌 Backend Selection
+## Migrating from v1.x
 
-### Using Supabase Only
+| v1 | v2 |
+| --- | --- |
+| `import 'package:core_architecture/supabase.dart';` | `import 'package:core_architecture_supabase/core_architecture_supabase.dart';` |
+| `import 'package:core_architecture/dio.dart';` | `import 'package:core_architecture_dio/core_architecture_dio.dart';` |
+| `import 'package:core_architecture/core_architecture.dart';` | unchanged |
+| `CoreConfig(useSupabase: true, deleteUserRpcName: 'x')` | `CoreConfig(appName: …)` + `SupabaseCoreExtension.initialize(deleteUserRpcName: 'x')` |
+| `CoreConfig(useDio: true, dioBaseUrl: 'https://…')` | `CoreConfig(appName: …)` + `DioCoreExtension.initialize(baseUrl: 'https://…')` |
+| `PurchaseFailure`, `PurchaseException` | **Removed.** In-app purchase support is out of scope in v2; extend `Failure` in your own app. |
+| `AuthException` (core's) | `AuthenticationException` |
+| `StorageException` (core's) | `LocalStorageException` |
+| `TimeoutException` (core's) | `RequestTimeoutException` |
+| `SUPABASE_ANON_KEY` | `SUPABASE_PUBLISHABLE_KEY` (the old name still works) |
 
-1. Delete `lib/src/backends/dio/` directory
-2. Delete `lib/dio.dart` barrel file
-3. Remove `dio` from `pubspec.yaml`
+`CoreConfig` now takes only `appName` and `envFile`. The `useSupabase`, `useDio`, `dioBaseUrl`
+and `deleteUserRpcName` fields moved to the backend initializers.
 
-### Using Dio (REST API) Only
+### Why three exceptions were renamed
 
-1. Delete `lib/src/backends/supabase/` directory
-2. Delete `lib/supabase.dart` barrel file
-3. Remove `supabase_flutter` from `pubspec.yaml`
-
----
-
-## 🧱 Core Layer
-
-### CoreInitializer
-
-Bootstraps the application and **automatically initializes the selected backend**. No need to call `SupabaseService.initialize()` or `DioService.initialize()` manually.
-
-```dart
-await CoreInitializer.initialize(
-  CoreConfig(
-    appName: 'MyApp',
-    useSupabase: true,
-    useDio: false,
-    deleteUserRpcName: 'delete_user', // configurable RPC name
-  ),
-);
-```
-
-### BaseEntity
-
-Abstract base for all database entities. Provides:
-- `id` field
-- `==` / `hashCode` equality by id
-- Abstract `copyWith()`
-- `toString()`
+v1 exported `AuthException`, `StorageException` and `TimeoutException` — names that are already
+taken by the Supabase SDK and by `dart:async`. Importing the barrel silently shadowed them, so
+this compiled and never matched anything the SDK throws:
 
 ```dart
-@JsonSerializable()
-class OrderModel extends BaseEntity {
-  final String title;
-  final double amount;
-
-  const OrderModel({
-    required super.id,
-    required this.title,
-    required this.amount,
-  });
-
-  @override
-  OrderModel copyWith({String? id, String? title, double? amount}) =>
-      OrderModel(
-        id: id ?? this.id,
-        title: title ?? this.title,
-        amount: amount ?? this.amount,
-      );
-
-  factory OrderModel.fromJson(Map<String, dynamic> json) =>
-      _$OrderModelFromJson(json);
-
-  Map<String, dynamic> toJson() => _$OrderModelToJson(this);
+try {
+  await supabase.client.auth.signInWithPassword(email: e, password: p);
+} on AuthException catch (e) {   // ← v1: core's type, never thrown here
+  …
 }
 ```
 
-### Error Handling
+The same trap applied to `Future.timeout()`, which throws `dart:async`'s `TimeoutException`.
+Core's types are now named so nothing collides, and the SDK / `dart:async` names mean exactly
+what you expect:
 
 ```dart
-// Always use Failure subclasses — never throw raw exceptions
+import 'package:core_architecture_supabase/core_architecture_supabase.dart';
+
+try {
+  await supabase.client.auth.signInWithPassword(email: e, password: p);
+} on AuthException catch (e) {          // the Supabase SDK's type ✓
+  …
+} on TimeoutException catch (e) {       // dart:async's type ✓
+  …
+}
+
+throw const AuthenticationException(message: 'Session expired');  // core's type
+```
+
+If you caught the old names in your app, rename them — the compiler will point at every site.
+
+In-app purchase support (`PurchaseFailure`, `PurchaseException` and the `purchases_flutter`
+dependency) was dropped entirely — it pulled heavy native bindings into every consumer for a
+concern that belongs in the app. Declare whatever you need on top of `Failure` there.
+
+---
+
+## Working on the monorepo
+
+Requires [Melos](https://melos.invertase.dev) 8+ (the workspace uses Dart pub workspaces).
+
+```bash
+dart pub global activate melos
+melos bootstrap          # resolves all packages against one shared lockfile
+```
+
+| Command | What it does |
+| --- | --- |
+| `melos run analyze` | `flutter analyze` in every package |
+| `melos run generate` | `build_runner build` in every package that needs it |
+| `melos run format` | `dart format` across all packages |
+| `melos run format-check` | Fails if anything is unformatted |
+| `melos run test` | `flutter test` in packages that have a `test/` directory |
+| `melos run clean` | `flutter clean` everywhere |
+
+Inside the workspace, the backend packages' git dependency on `core_architecture` resolves to
+`packages/core_architecture` automatically — local edits are picked up with no
+`dependency_overrides`. The git description only applies to consumers outside the repo.
+
+Melos configuration lives under the `melos:` key in the root `pubspec.yaml` (the standalone
+`melos.yaml` file was removed in Melos 7).
+
+### Generated code is committed
+
+`*.g.dart` files are **tracked in git on purpose**. These packages are consumed as git
+dependencies, and pub never runs `build_runner` on a dependency — a consumer gets exactly the
+files that are committed. Ignoring generated code would ship packages whose providers
+(`themeProvider`, `supabaseCrudClientProvider`, …) simply do not exist, and the failure only
+shows up in the consumer's build.
+
+After changing anything annotated with `@riverpod`, run `melos run generate` and commit the
+result alongside the source change.
+
+---
+
+## Releasing
+
+Every package is versioned together. To cut a release:
+
+1. `melos run generate` — make sure committed `*.g.dart` files match the sources.
+2. `melos run analyze` and `melos run test`.
+3. Bump `version:` in each `packages/*/pubspec.yaml`.
+4. Update the `ref:` in the backend packages' `core_architecture` git dependency to match.
+5. Tag and push: `git tag v2.0.0 && git push && git push --tags`.
+
+The `ref` in a package's git dependency must point at a tag that exists on GitHub — until the
+tag is pushed, consumers outside the repo cannot resolve the backend packages.
+
+---
+
+## Documentation
+
+* [`packages/core_architecture/README.md`](packages/core_architecture/README.md) — design tokens, themes, responsive system, widgets, utilities, providers, feature conventions
+* [`packages/core_architecture_supabase/README.md`](packages/core_architecture_supabase/README.md) — Supabase setup, auth, CRUD
+* [`packages/core_architecture_dio/README.md`](packages/core_architecture_dio/README.md) — REST setup, interceptors, CRUD
+
+---
+
+## Error handling
+
+Always throw `Failure` subclasses from repositories — never raw exceptions.
+
+```dart
 throw const ServerFailure(message: 'Failed to fetch orders');
 throw const NetworkFailure(message: 'No connection');
 throw const AuthFailure(message: 'Session expired');
 ```
 
-**Built-in failure types:**
-
-| Failure | Use Case |
+| Failure | Use case |
 | --- | --- |
 | `NetworkFailure` | Connectivity issues |
 | `ServerFailure` | 5xx responses |
@@ -262,7 +344,7 @@ throw const AuthFailure(message: 'Session expired');
 | `CacheFailure` | Cache misses/errors |
 | `UnknownFailure` | Catch-all |
 
-**Extending with project-specific failures:**
+Extend with your own:
 
 ```dart
 final class PaymentFailure extends Failure {
@@ -270,17 +352,49 @@ final class PaymentFailure extends Failure {
 }
 ```
 
-### Storage Service & StorageConstants
+### Failures vs. exceptions
 
-All storage keys are centralized in `StorageConstants` — never use magic strings.
+`Failure` is what repositories throw at feature code — a stable, backend-independent vocabulary.
+`AppException` is the lower-level counterpart used inside services.
+
+Core's exception names deliberately avoid the ones the Supabase SDK and `dart:async` already
+use, so an unprefixed `on AuthException` / `on TimeoutException` in your app always means the
+SDK's or `dart:async`'s type, never core's.
+
+| Core exception | Notes |
+| --- | --- |
+| `NetworkException` | |
+| `ServerException` | |
+| `RequestTimeoutException` | Not `dart:async`'s `TimeoutException` |
+| `AuthenticationException` | Not the Supabase SDK's `AuthException` |
+| `UnauthorizedException` | |
+| `DatabaseException` | |
+| `ValidationException` | |
+| `LocalStorageException` | Local key-value storage, not the SDK's `StorageException` |
+| `CacheException` | |
+
+---
+
+## Logging
 
 ```dart
-// ❌ Wrong
-await storage.write(key: 'access_token', value: token);
+final logger = ref.read(loggerServiceProvider);
 
-// ✅ Correct
-await storage.write(key: StorageConstants.accessToken, value: token);
+logger.d('Debug message', tag: 'MyFeature');
+logger.i('User logged in', tag: 'Auth');
+logger.w('Cache miss', tag: 'Cache');
+logger.e('API failed', error: e, stackTrace: st, tag: 'API');
+logger.fatal('Unrecoverable error', error: e, tag: 'Core');
+
+logger.maskSensitive('sk_live_abc123xyz', visibleStart: 7, visibleEnd: 3);
+// → "sk_live*******xyz"
 ```
+
+---
+
+## Storage
+
+All storage keys live in `StorageConstants` — never use magic strings.
 
 ```dart
 final storage = ref.read(storageServiceProvider);
@@ -293,446 +407,59 @@ await storage.clearAll();
 
 ---
 
-## 🎨 UI Design System
+## Troubleshooting
 
-### Design Tokens
+**`melos bootstrap` fails with a version conflict.** All packages share one lockfile, so their
+constraints must be mutually satisfiable. Align the conflicting constraint across
+`packages/*/pubspec.yaml`, then bootstrap again.
 
-All visual constants are centralized in `lib/src/ui/tokens/`. **Never use raw values.**
+**Consumer's `pub get` cannot resolve `core_architecture`.** The backend package's git `ref:`
+points at a tag that has not been pushed yet. Push the tag, or temporarily point `ref:` at a
+branch.
 
-```dart
-// ❌ Wrong
-Container(padding: EdgeInsets.all(16))
-Text('Hello', style: TextStyle(fontSize: 18, color: Colors.black))
-SizedBox(height: 8)
+**`_$…Provider` is undefined.** Code generation has not run. `melos run generate`, or inside a
+single package: `dart run build_runner build`.
 
-// ✅ Correct
-Container(padding: SpacingUtils.all(AppSpacings.wMd))
-Text('Hello', style: AppTypography.bodyLg)
-Gap.hSm
-```
-
-| Token | Location | Note |
-| --- | --- | --- |
-| Colors | `AppColors.*` | |
-| Typography | `AppTypography.*` | No color set — inherits from theme |
-| Spacing | `AppSpacings.*` + `SpacingUtils.*` | |
-| Radius | `AppRadius.*` | |
-| Sizes | `AppSizes.*` | |
-| Durations | `AppDurations.*` | |
-| Elevations | `AppElevations.*` | |
-| Gaps | `Gap.hSm / Gap.wMd` | All `const` |
-| Opacity | `AppOpacities.*` | Alpha values 0–255 |
-
-> **AppTypography** text styles have no color — they inherit from the active theme. Use `copyWith(color: context.colorScheme.primary)` when a specific color is needed.
-
-### Themes
-
-```dart
-MaterialApp(
-  theme: lightTheme,
-  darkTheme: darkTheme,
-  themeMode: ref.watch(themeProvider),
-)
-```
-
-### Widgets
-
-All string parameters are **required** — the consumer passes localized strings.
-
-| Widget | Description |
-| --- | --- |
-| `CustomButton` | Primary/secondary/outlined with icon support |
-| `CustomTextField` | Labeled input with validation and prefix/suffix icons |
-| `CustomDropdown<T>` | Searchable dropdown — requires `hintText`, `searchHint`, `noResultsText` |
-| `CustomMultiSelectDropdown<T>` | Multi-select — requires `hintText`, `selectedCountSuffix`, `clearLabel`, `confirmLabel`, `maxSelectionMessage` |
-| `CustomAppBar` | Consistent app bar |
-| `Navbar` | Bottom navigation bar |
-
-```dart
-CustomDropdown<String>(
-  label: 'City',
-  items: ['Istanbul', 'Ankara'],
-  itemLabel: (city) => city,
-  hintText: context.l10n.selectCity,
-  searchHint: context.l10n.search,
-  noResultsText: context.l10n.noResults,
-  onChanged: (value) {},
-)
-```
+**"SupabaseService must be initialized first".** `SupabaseCoreExtension.initialize()` (or
+`SupabaseService.initialize()`) was never awaited in `main()`, or `runApp` ran before it
+completed.
 
 ---
 
-## 🛠 Utilities
-
-### Spacing & Layout
-
-```dart
-Container(padding: SpacingUtils.all(AppSpacings.wMd))
-Container(padding: SpacingUtils.horizontal(AppSpacings.wLg))
-
-Column(children: [
-  Widget1(),
-  Gap.hMd,
-  Widget2(),
-])
-```
-
-### Context Extensions
-
-```dart
-context.colorScheme.primary
-context.textTheme.titleLarge
-context.showSuccess('Operation successful')
-context.showError('Something went wrong')
-context.showInfo('Note: ...')
-```
-
-### Validators
-
-All validators require the consumer to provide error messages — the package holds zero strings.
-
-```dart
-// ❌ Wrong
-validator: Validators.email,
-
-// ✅ Correct
-validator: (value) => Validators.email(
-  value,
-  errorMessage: context.l10n.invalidEmail,
-),
-```
-
-**Available validators:**
-`email`, `password`, `confirmPassword`, `required`, `number`,
-`positiveNumber`, `amount`, `minLength`, `maxLength`, `lengthRange`,
-`phone`, `url`, `date`, `futureDate`, `pastDate`, `custom`, `compose`
-
-> `turkishPhone`, `turkishLiraFormat` and `tcNumber` were removed in v1.3.1.
-
-### DateHelper
-
-String labels are provided by the consumer — no hardcoded strings in the package.
-
-```dart
-DateHelper.getGreeting(
-  morning: context.l10n.goodMorning,
-  afternoon: context.l10n.goodAfternoon,
-  evening: context.l10n.goodEvening,
-  night: context.l10n.goodNight,
-);
-
-DateHelper.getRelativeDate(
-  date,
-  todayLabel: context.l10n.today,
-  yesterdayLabel: context.l10n.yesterday,
-  tomorrowLabel: context.l10n.tomorrow,
-  daysAgoSuffix: context.l10n.daysAgo,
-  daysLaterSuffix: context.l10n.daysLater,
-);
-```
-
-### Other Utilities
-
-| Utility | Description |
-| --- | --- |
-| `PlatformInfo` | Check current platform (`isWeb`, `isMobile`, `isDesktop`) |
-| `AppBreakpoints` | Material 3 Window Size Classes |
-| `ResponsiveValue` | Adaptive values based on screen size |
-| `ResponsiveBuilder` | UI builder based on breakpoint |
-| `InputFormatters` | TextInputFormatter implementations |
-| `RadiusUtils` | BorderRadius factory methods |
-| `BorderUtils` | Border factory methods |
-| `SpinKitIndicator` | Loading animation widget |
-| `UrlLauncher` | Open URLs in browser |
-
----
-
-## 🔄 Providers
-
-### Theme Provider
-
-```dart
-final themeMode = ref.watch(themeProvider);
-ref.read(themeProvider.notifier).toggleTheme();
-ref.read(themeProvider.notifier).setThemeMode(ThemeMode.dark);
-```
-
-### Onboarding Provider
-
-```dart
-final seen = await ref.read(onboardingStateProvider.future);
-ref.read(onboardingStateProvider.notifier).markAsSeen();
-ref.read(onboardingStateProvider.notifier).reset();
-```
-
----
-
-## 💾 CRUD Operations
-
-Both backends implement `CrudContract`:
-
-| Method | Description |
-| --- | --- |
-| `query<T>` | List with filter, sort, pagination |
-| `getById<T>` | Single record by ID |
-| `insert<T>` | Create new record |
-| `update<T>` | Update existing record |
-| `delete` | Delete record |
-| `batchInsert<T>` | Bulk create |
-| `batchUpdate<T>` | Bulk update |
-| `batchDelete` | Bulk delete |
-| `upsert<T>` | Insert or update (onConflict supported) |
-| `batchUpsert<T>` | Bulk upsert |
-| `exists` | Check record existence |
-| `count` | Server-side count (safe for large tables) |
-| `rpc` | Remote procedure call — returns `Future<dynamic>` |
-
-### Example
-
-```dart
-@riverpod
-class TodosNotifier extends _$TodosNotifier {
-  @override
-  Future<List<Todo>> build() async {
-    final client = ref.watch(supabaseCrudClientProvider);
-
-    return await client.query<Todo>(
-      table: 'todos',
-      fromJson: (json) => Todo.fromJson(json),
-      filter: {'user_id': userId},
-      orderBy: 'created_at',
-      ascending: false,
-      limit: 20,
-    );
-  }
-}
-```
-
----
-
-## 🔐 Authentication (Supabase)
-
-Session persistence is managed by the Supabase SDK — never write auth tokens to storage manually.
-
-```dart
-final auth = ref.read(supabaseAuthProvider.notifier);
-
-await auth.signIn(email: 'user@email.com', password: '123456');
-await auth.signUp(email: 'user@email.com', password: '123456');
-await auth.signOut();
-await auth.resetPassword('user@email.com');
-await auth.updateMetadata({'avatar_url': 'https://...'});
-await auth.deleteAccount(); // RPC name configurable via CoreConfig
-```
-
-Auth errors are rethrown raw — the consumer handles display messages:
-
-```dart
-} catch (e) {
-  final message = _mapAuthError(e); // your own mapping
-  state = AsyncError(message, st);
-}
-```
-
----
-
-## 📊 Logging
-
-```dart
-final logger = ref.read(loggerServiceProvider);
-
-logger.d('Debug message', tag: 'MyFeature');
-logger.i('User logged in', tag: 'Auth');
-logger.w('Cache miss', tag: 'Cache');
-logger.e('API failed', error: e, stackTrace: st, tag: 'API');
-logger.fatal('Unrecoverable error', error: e, tag: 'Core');
-
-// Mask sensitive data
-logger.maskSensitive('sk_live_abc123xyz', visibleStart: 7, visibleEnd: 3);
-// Output: "sk_live*******xyz"
-```
-
----
-
-## 🚦 Adding a New Feature
-
-1. **Create feature directory:**
-
-```
-lib/features/orders/
-├── models/
-│   └── order_model.dart
-├── providers/
-│   └── orders_notifier.dart
-├── pages/
-│   └── orders_page.dart
-└── widgets/
-```
-
-2. **Define model:**
-
-```dart
-@JsonSerializable()
-class OrderModel extends BaseEntity {
-  final String title;
-
-  const OrderModel({required super.id, required this.title});
-
-  @override
-  OrderModel copyWith({String? id, String? title}) =>
-      OrderModel(id: id ?? this.id, title: title ?? this.title);
-
-  factory OrderModel.fromJson(Map<String, dynamic> json) =>
-      _$OrderModelFromJson(json);
-  Map<String, dynamic> toJson() => _$OrderModelToJson(this);
-}
-```
-
-3. **Create provider:**
-
-```dart
-@riverpod
-class OrdersNotifier extends _$OrdersNotifier {
-  @override
-  Future<List<OrderModel>> build() async {
-    final client = ref.watch(supabaseCrudClientProvider);
-    return await client.query<OrderModel>(
-      table: 'orders',
-      fromJson: OrderModel.fromJson,
-    );
-  }
-}
-```
-
-4. **Run build_runner** and build your UI.
-
----
-
-## ⚙ Customization Guide
-
-### Colors & Branding
-
-Edit `lib/src/ui/tokens/app_colors.dart`:
-
-```dart
-static const Color primary = Color(0xFF521A75);
-static const Color secondary = Color(0xFF7F5599);
-```
-
-### Typography
-
-This package does not bundle any fonts. Download your preferred font and add it to your app's `assets/fonts/` directory, then register it in your `pubspec.yaml`:
-
-```yaml
-flutter:
-  fonts:
-    - family: YourFontName
-      fonts:
-        - asset: assets/fonts/YourFont-Regular.ttf
-          weight: 400
-        - asset: assets/fonts/YourFont-Medium.ttf
-          weight: 500
-        - asset: assets/fonts/YourFont-SemiBold.ttf
-          weight: 600
-        - asset: assets/fonts/YourFont-Bold.ttf
-          weight: 700
-```
-
-Then update `lib/src/ui/tokens/app_typography.dart` in your project:
-
-```dart
-static const String fontFamily = "YourFontName";
-```
-
-> Do not set `color` on typography tokens — styles are theme-aware.
-
----
-
-## 📦 Optional Modules
-
-### In-App Purchases (RevenueCat)
-
-**To remove:**
-1. Delete `lib/src/core/errors/purchase_failure.dart`
-2. Remove the export from `lib/core_architecture.dart`
-3. Remove `purchases_flutter` from `pubspec.yaml`
-
----
-
-## 📋 Changelog
-
-### v1.3.1
-- **Validators:** All methods now require consumer-provided error messages — package holds zero strings
-- **Removed:** `turkishPhone`, `turkishLiraFormat` and `tcNumber` validators
-- **Widgets:** `CustomDropdown` and `CustomMultiSelectDropdown` string parameters are now required
-- **DateHelper:** `getGreeting()` and `getRelativeDate()` now require consumer-provided labels
-- **Supabase:** `formatAuthError()` removed — auth exceptions are rethrown raw
-- **Supabase:** Manual auth token storage removed — SDK manages session
-
-### v1.3.0
-- **CoreInitializer:** Now automatically initializes backends based on `CoreConfig` flags
-- **BaseEntity:** Added `id`, `==`/`hashCode`, abstract `copyWith()`, `toString()`
-- **StorageConstants:** Centralized storage key constants — no more magic strings
-- **AppTypography:** Removed hardcoded light-mode colors — styles are now theme-aware
-- **Gap:** All properties converted to `const`
-- **CrudContract.rpc():** Return type changed from `void` to `Future<dynamic>`
-- **SupabaseCrudClient.count():** Now uses server-side counting
-- **SupabaseCrudClient.upsert():** `onConflict` parameter now correctly passed
-- **LoggerService:** `wtf()` renamed to `fatal()`
-- **ThemeProvider:** Notifier class renamed from `Theme` to `ThemeNotifier`
-- **DateHelper:** String constants `t` prefix removed (e.g. `tToday` → `today`)
-- **analysis_options.yaml:** Added with explicit linting rules
-- **Internal imports:** All 17 internal files now use relative imports
-- **Supabase barrel:** `onboarding_provider.dart` no longer imports `supabase.dart`
-
-### v1.2.0
-- Initial public release
-
----
-
-## 🔧 Troubleshooting
-
-### Build Runner Errors
-
-```bash
-flutter clean
-flutter pub get
-flutter pub run build_runner clean
-flutter pub run build_runner build --delete-conflicting-outputs
-```
-
-### Import Resolution
-
-* **Core only:** `import 'package:core_architecture/core_architecture.dart';`
-* **With Supabase:** `import 'package:core_architecture/supabase.dart';`
-* **With Dio:** `import 'package:core_architecture/dio.dart';`
-
-### Backend Not Initialized
-
-If you see `SupabaseService must be initialized first`, ensure `CoreInitializer.initialize()` is called in `main()` with the correct flags. Do not call backend services manually.
-
----
-
-## 📋 Quick Reference
-
-| Need | Use |
-| --- | --- |
-| Platform Check | `PlatformInfo.isWeb` |
-| Breakpoint | `context.windowSizeClass` |
-| Responsive Val | `context.responsive<double>(compact: 16, medium: 24)` |
-| Padding | `SpacingUtils.all(AppSpacings.wMd)` |
-| Gap | `Gap.hMd` / `Gap.wSm` |
-| Color | `context.colorScheme.primary` |
-| Text Style | `AppTypography.bodyLg` |
-| Validation | `Validators.email(value, errorMessage: ...)` |
-| Button | `CustomButton(...)` |
-| Input | `CustomTextField(...)` |
-| Dropdown | `CustomDropdown(hintText: ..., searchHint: ..., noResultsText: ...)` |
-| Navigate | `context.go('/path')` |
-| Snackbar | `context.showSuccess('Message')` |
-| Log | `ref.read(loggerServiceProvider).d('Msg', tag: 'Tag')` |
-| Fatal Log | `ref.read(loggerServiceProvider).fatal('Msg', error: e)` |
-| CRUD | `ref.watch(supabaseCrudClientProvider)` or `dioCrudClientProvider` |
-| Storage Key | `StorageConstants.accessToken` |
-| Theme | `ref.read(themeProvider.notifier).toggleTheme()` |
-| Storage | `ref.read(storageServiceProvider)` |
+## Changelog
+
+### v2.0.0 — Monorepo split (breaking)
+
+* Split into `core_architecture`, `core_architecture_supabase` and `core_architecture_dio`;
+  the repo is now a Melos-managed pub workspace.
+* `supabase_flutter`, `dio` and `purchases_flutter` are no longer dependencies of the core
+  package.
+* Removed the `lib/supabase.dart` and `lib/dio.dart` barrels — each backend package now has its
+  own top-level barrel.
+* `CoreConfig` reduced to `appName` + `envFile`; backend setup moved to
+  `SupabaseCoreExtension.initialize()` / `DioCoreExtension.initialize()`, both of which are
+  standalone and no longer require `CoreInitializer`.
+* Added `CoreInitializer.quickStart()` for zero-config startup.
+* `StorageConstants` is now exported from the core barrel.
+* Generated `*.g.dart` files are committed, so git-dependency consumers get working providers.
+* Removed in-app purchase support — `PurchaseFailure`, `PurchaseException` and the
+  `purchases_flutter` dependency are gone.
+
+**Bug fixes**
+
+* **Supabase auth and storage errors were never caught.** `SupabaseService` hid the SDK's
+  `AuthException` / `StorageException` behind core's same-named types, so every
+  `on AuthException` / `on StorageException` clause in the service silently failed to match and
+  errors fell through to the generic handler. Core's types are renamed
+  (`AuthenticationException`, `LocalStorageException`) and the SDK's names are no longer hidden.
+  Covered by `packages/core_architecture_supabase/test/exception_naming_test.dart`.
+* **Core's `TimeoutException` shadowed `dart:async`'s.** Importing the barrel silently rebound
+  the name, so `on TimeoutException` would not catch a `Future.timeout()`. Renamed to
+  `RequestTimeoutException`.
+* **`Supabase.initialize` no longer uses the deprecated `anonKey` parameter.** The key is read
+  from `SUPABASE_PUBLISHABLE_KEY`, falling back to `SUPABASE_ANON_KEY`, and passed as
+  `publishableKey`. Existing `.env` files keep working unchanged.
+
+### v1.3.1 and earlier
+
+See the git history of the pre-split package.

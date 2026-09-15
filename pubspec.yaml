@@ -1,0 +1,68 @@
+name: core_architecture_workspace
+description: Melos-managed monorepo for the core_architecture Flutter packages.
+publish_to: 'none'
+
+environment:
+  sdk: '>=3.8.0 <4.0.0'
+
+# Dart pub workspace — every member resolves against a single shared lockfile.
+# Members declare `resolution: workspace` in their own pubspec.yaml.
+workspace:
+  - packages/core_architecture
+  - packages/core_architecture_supabase
+  - packages/core_architecture_dio
+
+dev_dependencies:
+  melos: ^8.7.0
+
+# Melos 8 reads its configuration from here (the standalone melos.yaml was
+# removed in Melos 7). Run `melos bootstrap`, then `melos run <script>`.
+melos:
+  name: core_architecture
+  repository: https://github.com/Himera19/core_architecture
+
+  packages:
+    - packages/*
+
+  command:
+    version:
+      linkToCommits: true
+      workspaceChangelog: true
+
+  scripts:
+    analyze:
+      description: Run `flutter analyze` in every package.
+      exec:
+        command: flutter analyze
+        failFast: true
+
+    format:
+      description: Format every package.
+      exec:
+        command: dart format .
+
+    format-check:
+      description: Verify formatting without writing changes.
+      exec:
+        command: dart format --set-exit-if-changed .
+        failFast: true
+
+    generate:
+      description: Run build_runner in packages that use code generation.
+      exec:
+        command: dart run build_runner build --delete-conflicting-outputs
+        failFast: true
+      packageFilters:
+        dependsOn: build_runner
+
+    test:
+      description: Run tests in packages that have a test/ directory.
+      exec:
+        command: flutter test
+      packageFilters:
+        dirExists: test
+
+    clean:
+      description: Remove build artifacts from every package.
+      exec:
+        command: flutter clean

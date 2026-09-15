@@ -1,0 +1,63 @@
+# =============================================================================
+# SECURITY — never commit these
+# =============================================================================
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.p8
+*.mobileprovision
+*.keystore
+*.jks
+google-services.json
+GoogleService-Info.plist
+AuthKey_*.p8
+
+# =============================================================================
+# DART / FLUTTER / MELOS
+# =============================================================================
+.dart_tool/
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+pubspec.lock
+pubspec_overrides.yaml
+coverage/
+
+# Generated Dart code is COMMITTED on purpose.
+# These packages are consumed as git dependencies, and pub never runs
+# build_runner on a dependency — a consumer gets exactly what is committed
+# here. Ignoring *.g.dart would ship packages whose providers do not exist.
+# Regenerate with `melos run generate` and commit the result.
+
+# =============================================================================
+# IDE / OS
+# =============================================================================
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/tasks.json
+!.vscode/settings.json
+.DS_Store
+._*
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# =============================================================================
+# MISC
+# =============================================================================
+*.log
+logs/
+*.swp
+*.swo
+*~
+*.tmp
