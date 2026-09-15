@@ -3,7 +3,7 @@ description: "Every feature of core_architecture, running — the showcase app."
 publish_to: 'none'
 resolution: workspace
 
-version: 5.1.1
+version: 6.0.0
 
 environment:
   sdk: ^3.11.0
@@ -14,6 +14,11 @@ dependencies:
 
   cupertino_icons: ^1.0.8
   go_router: ^16.3.0
+
+  # Directly used by the Utils screen, to load the date symbols a non-English
+  # locale needs. core_architecture depends on it too, but a direct use wants
+  # a direct dependency.
+  intl: ^0.20.2
 
   # The package this app exists to demonstrate. A path dependency, so the demo
   # always shows the source next to it rather than a published tag.

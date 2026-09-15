@@ -1,6 +1,7 @@
 import 'package:core_architecture/core_architecture.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:core_architecture_demo/main.dart';
 import 'package:core_architecture_demo/screens/domain_screen.dart';
 import 'package:core_architecture_demo/screens/home_screen.dart';
@@ -64,7 +65,10 @@ Future<void> pumpScreen(
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
-        storageServiceProvider.overrideWithValue(storage ?? FakeStorage()),
+        preferencesStorageProvider.overrideWithValue(storage ?? FakeStorage()),
+        // Faked as well: the settings providers read the keystore once, to
+        // carry across a value written before 6.0.0.
+        secureStorageProvider.overrideWithValue(FakeStorage()),
       ],
       child: MaterialApp(
         // Mirrors main.dart, loadingIndicatorBuilder included: a screen that
@@ -86,6 +90,11 @@ Future<void> pumpScreen(
 }
 
 void main() {
+  // Mirrors main.dart. DateHelper reads its names from intl, so the Utils
+  // screen throws LocaleDataException without this — the app loads the
+  // symbols at startup, and a harness that skips it exercises a different app.
+  setUpAll(initializeDateFormatting);
+
   // Each screen touches a different slice of the package, so rendering them
   // all is the broadest check that every export still builds and runs.
   group('every showcase screen renders', () {
@@ -332,10 +341,12 @@ void main() {
       expect(
         tester
             .getSize(
-              find.ancestor(
-                of: find.text('Close'),
-                matching: find.byType(SizedBox),
-              ).first,
+              find
+                  .ancestor(
+                    of: find.text('Close'),
+                    matching: find.byType(SizedBox),
+                  )
+                  .first,
             )
             .width,
         AppSizes.dialogButtonWidth,
@@ -346,19 +357,23 @@ void main() {
       expect(find.text('Sized by tokens'), findsNothing);
     });
 
-    testWidgets('the app\'s own spinner reaches every button through the theme', (
-      tester,
-    ) async {
-      await pumpScreen(tester, const WidgetsScreen());
+    testWidgets(
+      'the app\'s own spinner reaches every button through the theme',
+      (tester) async {
+        await pumpScreen(tester, const WidgetsScreen());
 
-      // Four loading buttons, none of which asks for PulsingDots: they get it
-      // from AppTheme(loadingIndicatorBuilder: ...) in main.dart.
-      expect(find.byType(PulsingDots), findsNWidgets(ButtonType.values.length));
+        // Four loading buttons, none of which asks for PulsingDots: they get it
+        // from AppTheme(loadingIndicatorBuilder: ...) in main.dart.
+        expect(
+          find.byType(PulsingDots),
+          findsNWidgets(ButtonType.values.length),
+        );
 
-      // And the one button that overrides it keeps Material's spinner.
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
-      expect(tester.takeException(), isNull);
-    });
+        // And the one button that overrides it keeps Material's spinner.
+        expect(find.byType(CircularProgressIndicator), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      },
+    );
 
     testWidgets('a loading button stops answering taps', (tester) async {
       await pumpScreen(tester, const WidgetsScreen());
@@ -391,9 +406,14 @@ void main() {
         find.text('${DateHelper.getDaysInMonth(now).length}'),
         findsWidgets,
       );
-      // The week header is getDayName, not a hardcoded list.
+      // The week headers come from intl per locale, not from a list baked
+      // into the package — the same weekday, spelled two ways.
       expect(
-        find.text(DateHelper.getDayName(now.weekday).substring(0, 3)),
+        find.text(DateHelper.getDayName(1, locale: 'en_US').substring(0, 3)),
+        findsWidgets,
+      );
+      expect(
+        find.text(DateHelper.getDayName(1, locale: 'tr').substring(0, 3)),
         findsWidgets,
       );
       expect(

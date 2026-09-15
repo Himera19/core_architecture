@@ -4,17 +4,18 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../core/constants/storage_constants.dart';
 import '../core/core_providers.dart';
 import '../core/logging/logger_service.dart';
+import '../services/settings_migration.dart';
 import '../services/storage_service.dart';
 
 part 'theme_provider.g.dart';
 
-/// Manages the app theme mode with secure persistence.
+/// Manages the app theme mode, persisted as a preference.
 ///
 /// Uses [StorageService] and [LoggerService] via Riverpod DI,
 /// making it fully testable and consistent with the architecture.
 ///
 /// [build] returns [ThemeMode.light] synchronously and loads the persisted
-/// mode in the background, so the first frame never waits on the keychain.
+/// mode in the background, so the first frame never waits on storage.
 /// A mode the user picks while that read is still in flight wins — see
 /// [_loadTheme].
 @Riverpod(keepAlive: true)
@@ -24,7 +25,11 @@ class ThemeNotifier extends _$ThemeNotifier {
   /// second assignment to a `late final` field throws
   /// `LateInitializationError`, leaving the provider stuck in an error state.
   late LoggerService _logger;
-  late StorageService _storage;
+  late StorageService _preferences;
+
+  /// Only read from, and only until the value written by a version before
+  /// 6.0.0 has been carried across — see [readMigratedSetting].
+  late StorageService _legacySecure;
 
   static const String _storageKey = StorageConstants.themeMode;
 
@@ -34,7 +39,8 @@ class ThemeNotifier extends _$ThemeNotifier {
   @override
   ThemeMode build() {
     _logger = ref.watch(loggerServiceProvider);
-    _storage = ref.watch(storageServiceProvider);
+    _preferences = ref.watch(preferencesStorageProvider);
+    _legacySecure = ref.watch(secureStorageProvider);
 
     // A rebuild resets [state] to the default below, so the stored mode has to
     // be read again — otherwise a stale `true` here would make [_loadTheme]
@@ -45,16 +51,21 @@ class ThemeNotifier extends _$ThemeNotifier {
     return ThemeMode.light;
   }
 
-  /// Loads saved theme mode from secure storage.
+  /// Loads the saved theme mode.
   ///
-  /// This runs unawaited from [build], so on a slow keychain it can finish
+  /// This runs unawaited from [build], so on slow storage it can finish
   /// *after* the user has already toggled the theme. Writing the stored value
   /// unconditionally at that point would silently revert their choice — the
   /// UI snapping back to the old palette a moment after the tap — so a mode
   /// chosen in the meantime is left alone.
   Future<void> _loadTheme() async {
     try {
-      final String? stored = await _storage.read(key: _storageKey);
+      final String? stored = await readMigratedSetting(
+        key: _storageKey,
+        preferences: _preferences,
+        legacy: _legacySecure,
+        logger: _logger,
+      );
 
       if (_userChose) {
         _logger.i(
@@ -81,22 +92,22 @@ class ThemeNotifier extends _$ThemeNotifier {
     }
   }
 
-  /// Sets a specific theme mode and persists securely.
+  /// Sets a specific theme mode and persists it.
   Future<void> setThemeMode(ThemeMode mode) async {
     _userChose = true;
     state = mode;
     // Logged before the write so the trace reflects when the UI changed, not
-    // when the keychain came back.
+    // when storage came back.
     _logger.i('Theme set to ${mode.name}', tag: 'Theme');
 
     try {
-      await _storage.write(key: _storageKey, value: mode.name);
+      await _preferences.write(key: _storageKey, value: mode.name);
     } catch (e, st) {
       _logger.e('Theme set failed', error: e, stackTrace: st, tag: 'Theme');
     }
   }
 
-  /// Toggles between light and dark modes and persists securely.
+  /// Toggles between light and dark modes and persists the result.
   Future<void> toggleTheme() {
     return setThemeMode(
       state == ThemeMode.light ? ThemeMode.dark : ThemeMode.light,

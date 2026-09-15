@@ -1,8 +1,9 @@
 import 'package:core_architecture/core_architecture.dart';
 import 'package:flutter/material.dart';
+import '../main.dart';
 import '../showcase/section.dart';
 
-/// The service layer: [storageServiceProvider] doing real reads and writes,
+/// The service layer: the two storage providers doing real reads and writes,
 /// [onboardingStateProvider], [loggerServiceProvider] and [CoreInitializer].
 class StorageScreen extends ConsumerStatefulWidget {
   const StorageScreen({super.key});
@@ -47,7 +48,10 @@ class _StorageScreenState extends ConsumerState<StorageScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final StorageService storage = ref.watch(storageServiceProvider);
+    // Two stores, on purpose. The buttons below drive preferences; the secure
+    // one is shown beside it so the split is visible rather than described.
+    final StorageService storage = ref.watch(preferencesStorageProvider);
+    final StorageService secure = ref.watch(secureStorageProvider);
     final LoggerService logger = ref.watch(loggerServiceProvider);
     final AsyncValue<bool> onboarding = ref.watch(onboardingStateProvider);
 
@@ -60,7 +64,7 @@ class _StorageScreenState extends ConsumerState<StorageScreen> {
           children: [
             Readout('isInitialized', '${CoreInitializer.isInitialized}'),
             Readout('shared logger', CoreInitializer.logger.runtimeType.name),
-            Readout('default env file', const CoreConfig(appName: 'Hobby').envFile),
+            Readout('default env file', const CoreConfig(appName: appName).envFile),
             Gap.hXs,
             Text(
               'main() calls CoreInitializer.quickStart, which sets up the '
@@ -73,17 +77,29 @@ class _StorageScreenState extends ConsumerState<StorageScreen> {
         ),
 
         Section(
-          title: 'Key-value storage, for real',
-          api: 'storageServiceProvider · StorageService',
+          title: 'Two stores, different costs',
+          api: 'preferencesStorageProvider · secureStorageProvider',
           children: [
-            Readout('implementation', storage.runtimeType.name),
-            // The provider binds StorageService to SecureStorageService, so
-            // everything below goes through the platform keystore — including
-            // the theme mode and the onboarding flag.
-            Readout(
-              'is SecureStorageService',
-              '${storage is SecureStorageService}',
+            Readout('preferences', storage.runtimeType.name),
+            Readout('secure', secure.runtimeType.name),
+            Gap.hXs,
+            Text(
+              'Settings go in preferences: an on-device file, read once into '
+              'memory. Tokens go in the keystore, which is slower and can be '
+              'unavailable before the device is first unlocked. Until 6.0.0 '
+              'both went through the keystore, so every app paid that price '
+              'for its theme.',
+              style: AppTypography.bodySm.copyWith(
+                color: context.colorScheme.onSurfaceVariant,
+              ),
             ),
+          ],
+        ),
+
+        Section(
+          title: 'Key-value storage, for real',
+          api: 'StorageService — driving the preferences store',
+          children: [
             Gap.hSm,
             CustomTextField(
               controller: _keyController,
@@ -142,8 +158,8 @@ class _StorageScreenState extends ConsumerState<StorageScreen> {
               text: 'clearAll',
               size: ButtonSize.small,
               type: ButtonType.danger,
-              // Wipes the theme mode and onboarding flag too — they live in
-              // the same store.
+              // Wipes the theme mode and onboarding flag too — they are
+              // preferences as well.
               onPressed: () => _run('clearAll', () async {
                 await storage.clearAll();
                 return 'ok';

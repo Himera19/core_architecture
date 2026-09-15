@@ -30,6 +30,8 @@ export 'src/backends/contracts/crud_contract.dart';
 // ==================== Services ====================
 export 'src/services/storage_service.dart';
 export 'src/services/secure_storage_service.dart';
+export 'src/services/preferences_storage_service.dart';
+export 'src/services/settings_migration.dart';
 
 // ==================== UI Layer ====================
 // Themes

@@ -98,6 +98,34 @@ class _WidgetsScreenState extends State<WidgetsScreen> {
             Gap.hSm,
             // A null callback is the disabled state.
             const CustomButton(text: 'disabled', onPressed: null),
+            Gap.hLg,
+            Text(
+              'Full width is the default, but two buttons can share a row. '
+              'Before 6.0.0 the width was forced, so this took an Expanded '
+              'around each one.',
+              style: AppTypography.bodySm.copyWith(
+                color: colors.onSurfaceVariant,
+              ),
+            ),
+            Gap.hSm,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                CustomButton(
+                  text: 'Cancel',
+                  fullWidth: false,
+                  type: ButtonType.outlined,
+                  onPressed: () {},
+                ),
+                Gap.wSm,
+                CustomButton(
+                  text: 'Save',
+                  fullWidth: false,
+                  icon: Icons.check,
+                  onPressed: () {},
+                ),
+              ],
+            ),
           ],
         ),
 

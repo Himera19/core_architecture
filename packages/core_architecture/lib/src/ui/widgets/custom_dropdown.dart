@@ -77,8 +77,6 @@ class _CustomDropdownState<T> extends State<CustomDropdown<T>> {
   }
 
   void _showDropdownMenu(FormFieldState<T> fieldState) {
-    final colors = context.colorScheme;
-
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -97,7 +95,6 @@ class _CustomDropdownState<T> extends State<CustomDropdown<T>> {
 
           widget.onChanged?.call(value);
         },
-        colorScheme: colors,
         searchHint: widget.searchHint,
         noResultsText: widget.noResultsText,
       ),
@@ -187,7 +184,6 @@ class _DropdownBottomSheet<T> extends StatefulWidget {
   final T? selectedValue;
   final CustomDropdownType type;
   final void Function(T?) onChanged;
-  final ColorScheme colorScheme;
   final String searchHint;
   final String noResultsText;
 
@@ -197,7 +193,6 @@ class _DropdownBottomSheet<T> extends StatefulWidget {
     required this.selectedValue,
     required this.type,
     required this.onChanged,
-    required this.colorScheme,
     required this.searchHint,
     required this.noResultsText,
   });
@@ -230,161 +225,173 @@ class _DropdownBottomSheetState<T> extends State<_DropdownBottomSheet<T>> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = widget.colorScheme;
+    // Read from this sheet's own context, not handed down from the caller:
+    // a theme change while the sheet is open reaches it that way, and the
+    // sheet cannot drift from the app around it.
+    final ColorScheme colors = context.colorScheme;
     final textTheme = context.textTheme;
 
     return Padding(
       // The sheet is `isScrollControlled`, so it sits over the keyboard rather
       // than above it. Without this the search field — the one thing that
       // raises the keyboard — ends up behind it.
+      // Bottom inset only: the keyboard is what covers this sheet, and a
+      // SafeArea below handles the home indicator.
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
-      child: Container(
-        decoration: BoxDecoration(
-          color: colors.surface,
-          borderRadius: const BorderRadius.vertical(
-            top: Radius.circular(AppRadius.lg),
-          ),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              margin: SpacingUtils.onlyTop(AppSpacings.hSm),
-              width: AppSizes.handleWidth,
-              height: AppSizes.handleHeight,
-              decoration: BoxDecoration(
-                color: colors.onSurfaceVariant.withValues(alpha: 0.4),
-                borderRadius: BorderRadius.circular(AppRadius.sm),
-              ),
+      // top: false — the sheet is anchored to the bottom, so only the home
+      // indicator needs clearing; padding the top would leave a gap.
+      child: SafeArea(
+        top: false,
+        child: Container(
+          decoration: BoxDecoration(
+            color: colors.surface,
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(AppRadius.lg),
             ),
-
-            Gap.hMd,
-
-            if (widget.type == CustomDropdownType.searchable) ...[
-              Padding(
-                padding: SpacingUtils.horizontal(AppSpacings.wMd),
-                child: TextField(
-                  controller: _searchController,
-                  onChanged: (value) {
-                    setState(() {
-                      _searchQuery = value;
-                    });
-                  },
-                  decoration: InputDecoration(
-                    hintText: widget.searchHint,
-                    hintStyle: textTheme.bodyMedium?.copyWith(
-                      color: colors.onSurfaceVariant.withValues(alpha: 0.6),
-                    ),
-                    prefixIcon: Icon(
-                      CustomDropdownConstants.search,
-                      color: colors.primary,
-                      size: AppSizes.iconMd,
-                    ),
-                    suffixIcon: _searchQuery.isNotEmpty
-                        ? IconButton(
-                            icon: Icon(
-                              CustomDropdownConstants.clear,
-                              color: colors.onSurfaceVariant,
-                              size: AppSizes.iconMd,
-                            ),
-                            onPressed: () {
-                              _searchController.clear();
-                              setState(() {
-                                _searchQuery = '';
-                              });
-                            },
-                          )
-                        : null,
-                    filled: true,
-                    fillColor: colors.surfaceContainerHighest,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(AppRadius.md),
-                      borderSide: BorderSide.none,
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(AppRadius.md),
-                      borderSide: BorderSide(color: colors.outlineVariant),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(AppRadius.md),
-                      borderSide: BorderSide(
-                        color: colors.primary,
-                        width: AppBorders.normal,
-                      ),
-                    ),
-                    contentPadding:
-                        SpacingUtils.horizontal(AppSpacings.wMd) +
-                        SpacingUtils.vertical(AppSpacings.hSm),
-                  ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                margin: SpacingUtils.onlyTop(AppSpacings.hSm),
+                width: AppSizes.handleWidth,
+                height: AppSizes.handleHeight,
+                decoration: BoxDecoration(
+                  color: colors.onSurfaceVariant.withValues(alpha: 0.4),
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
                 ),
               ),
-              Gap.hMd,
-            ],
 
-            Flexible(
-              child: _filteredItems.isEmpty
-                  ? SizedBox(
-                      width: double.infinity,
-                      child: Padding(
-                        padding: SpacingUtils.all(AppSpacings.wLg),
-                        child: Text(
-                          widget.noResultsText,
-                          style: textTheme.bodyMedium?.copyWith(
-                            color: colors.onSurfaceVariant,
-                          ),
-                          textAlign: TextAlign.center,
+              Gap.hMd,
+
+              if (widget.type == CustomDropdownType.searchable) ...[
+                Padding(
+                  padding: SpacingUtils.horizontal(AppSpacings.wMd),
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: (value) {
+                      setState(() {
+                        _searchQuery = value;
+                      });
+                    },
+                    decoration: InputDecoration(
+                      hintText: widget.searchHint,
+                      hintStyle: textTheme.bodyMedium?.copyWith(
+                        color: colors.onSurfaceVariant.withValues(alpha: 0.6),
+                      ),
+                      prefixIcon: Icon(
+                        CustomDropdownConstants.search,
+                        color: colors.primary,
+                        size: AppSizes.iconMd,
+                      ),
+                      suffixIcon: _searchQuery.isNotEmpty
+                          ? IconButton(
+                              icon: Icon(
+                                CustomDropdownConstants.clear,
+                                color: colors.onSurfaceVariant,
+                                size: AppSizes.iconMd,
+                              ),
+                              onPressed: () {
+                                _searchController.clear();
+                                setState(() {
+                                  _searchQuery = '';
+                                });
+                              },
+                            )
+                          : null,
+                      filled: true,
+                      fillColor: colors.surfaceContainerHighest,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.md),
+                        borderSide: BorderSide.none,
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.md),
+                        borderSide: BorderSide(color: colors.outlineVariant),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.md),
+                        borderSide: BorderSide(
+                          color: colors.primary,
+                          width: AppBorders.normal,
                         ),
                       ),
-                    )
-                  : ListView.builder(
-                      shrinkWrap: true,
-                      itemCount: _filteredItems.length,
-                      padding: SpacingUtils.onlyBottom(AppSpacings.hLg),
-                      itemBuilder: (context, index) {
-                        final item = _filteredItems[index];
-                        final isSelected = item == widget.selectedValue;
+                      contentPadding:
+                          SpacingUtils.horizontal(AppSpacings.wMd) +
+                          SpacingUtils.vertical(AppSpacings.hSm),
+                    ),
+                  ),
+                ),
+                Gap.hMd,
+              ],
 
-                        return InkWell(
-                          onTap: () {
-                            widget.onChanged(item);
-                            Navigator.pop(context);
-                          },
-                          child: Container(
-                            padding:
-                                SpacingUtils.horizontal(AppSpacings.wMd) +
-                                SpacingUtils.vertical(AppSpacings.hSm),
-                            color: isSelected
-                                ? colors.primaryContainer.withValues(alpha: 0.3)
-                                : null,
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    widget.itemLabel(item),
-                                    style: textTheme.bodyLarge?.copyWith(
-                                      color: isSelected
-                                          ? colors.primary
-                                          : colors.onSurface,
-                                      fontWeight: isSelected
-                                          ? FontWeight.w600
-                                          : FontWeight.normal,
+              Flexible(
+                child: _filteredItems.isEmpty
+                    ? SizedBox(
+                        width: double.infinity,
+                        child: Padding(
+                          padding: SpacingUtils.all(AppSpacings.wLg),
+                          child: Text(
+                            widget.noResultsText,
+                            style: textTheme.bodyMedium?.copyWith(
+                              color: colors.onSurfaceVariant,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      )
+                    : ListView.builder(
+                        shrinkWrap: true,
+                        itemCount: _filteredItems.length,
+                        padding: SpacingUtils.onlyBottom(AppSpacings.hLg),
+                        itemBuilder: (context, index) {
+                          final item = _filteredItems[index];
+                          final isSelected = item == widget.selectedValue;
+
+                          return InkWell(
+                            onTap: () {
+                              widget.onChanged(item);
+                              Navigator.pop(context);
+                            },
+                            child: Container(
+                              padding:
+                                  SpacingUtils.horizontal(AppSpacings.wMd) +
+                                  SpacingUtils.vertical(AppSpacings.hSm),
+                              color: isSelected
+                                  ? colors.primaryContainer.withValues(
+                                      alpha: 0.3,
+                                    )
+                                  : null,
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      widget.itemLabel(item),
+                                      style: textTheme.bodyLarge?.copyWith(
+                                        color: isSelected
+                                            ? colors.primary
+                                            : colors.onSurface,
+                                        fontWeight: isSelected
+                                            ? FontWeight.w600
+                                            : FontWeight.normal,
+                                      ),
                                     ),
                                   ),
-                                ),
-                                if (isSelected)
-                                  Icon(
-                                    Icons.check,
-                                    color: colors.primary,
-                                    size: AppSizes.iconMd,
-                                  ),
-                              ],
+                                  if (isSelected)
+                                    Icon(
+                                      Icons.check,
+                                      color: colors.primary,
+                                      size: AppSizes.iconMd,
+                                    ),
+                                ],
+                              ),
                             ),
-                          ),
-                        );
-                      },
-                    ),
-            ),
-          ],
+                          );
+                        },
+                      ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -441,8 +448,6 @@ class _CustomMultiSelectDropdownState<T>
   }
 
   void _showMultiSelectMenu(FormFieldState<List<T>> fieldState) {
-    final colors = context.colorScheme;
-
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -463,7 +468,6 @@ class _CustomMultiSelectDropdownState<T>
 
           widget.onChanged?.call(values);
         },
-        colorScheme: colors,
         maxSelections: widget.maxSelections,
         selectedCountSuffix: widget.selectedCountSuffix,
         clearLabel: widget.clearLabel,
@@ -580,7 +584,6 @@ class _MultiSelectBottomSheet<T> extends StatefulWidget {
   final String Function(T) itemLabel;
   final List<T> selectedValues;
   final void Function(List<T>) onChanged;
-  final ColorScheme colorScheme;
   final int? maxSelections;
   final String selectedCountSuffix;
   final String clearLabel;
@@ -592,7 +595,6 @@ class _MultiSelectBottomSheet<T> extends StatefulWidget {
     required this.itemLabel,
     required this.selectedValues,
     required this.onChanged,
-    required this.colorScheme,
     required this.selectedCountSuffix,
     required this.clearLabel,
     required this.confirmLabel,
@@ -637,112 +639,122 @@ class _MultiSelectBottomSheetState<T>
 
   @override
   Widget build(BuildContext context) {
-    final colors = widget.colorScheme;
+    // Read from this sheet's own context, not handed down from the caller:
+    // a theme change while the sheet is open reaches it that way, and the
+    // sheet cannot drift from the app around it.
+    final ColorScheme colors = context.colorScheme;
     final textTheme = context.textTheme;
 
     return Padding(
       // Same reason as the single-select sheet: `isScrollControlled` puts the
       // sheet over the keyboard, so the confirm button at the bottom would sit
       // behind it.
+      // Bottom inset only: the keyboard is what covers this sheet, and a
+      // SafeArea below handles the home indicator.
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
-      child: Container(
-        decoration: BoxDecoration(
-          color: colors.surface,
-          borderRadius: const BorderRadius.vertical(
-            top: Radius.circular(AppRadius.lg),
+      // top: false — the sheet is anchored to the bottom, so only the home
+      // indicator needs clearing; padding the top would leave a gap.
+      child: SafeArea(
+        top: false,
+        child: Container(
+          decoration: BoxDecoration(
+            color: colors.surface,
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(AppRadius.lg),
+            ),
           ),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              margin: SpacingUtils.onlyTop(AppSpacings.hSm),
-              width: AppSizes.handleWidth,
-              height: AppSizes.handleHeight,
-              decoration: BoxDecoration(
-                color: colors.onSurfaceVariant.withValues(alpha: 0.4),
-                borderRadius: BorderRadius.circular(AppRadius.sm),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                margin: SpacingUtils.onlyTop(AppSpacings.hSm),
+                width: AppSizes.handleWidth,
+                height: AppSizes.handleHeight,
+                decoration: BoxDecoration(
+                  color: colors.onSurfaceVariant.withValues(alpha: 0.4),
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                ),
               ),
-            ),
 
-            Gap.hMd,
+              Gap.hMd,
 
-            Padding(
-              padding: SpacingUtils.horizontal(AppSpacings.wMd),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    '${_tempSelected.length} ${widget.selectedCountSuffix}',
-                    style: textTheme.titleMedium,
-                  ),
-                  if (_tempSelected.isNotEmpty)
-                    TextButton(
-                      onPressed: () {
-                        setState(() {
-                          _tempSelected.clear();
-                        });
-                      },
-                      child: Text(widget.clearLabel),
+              Padding(
+                padding: SpacingUtils.horizontal(AppSpacings.wMd),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '${_tempSelected.length} ${widget.selectedCountSuffix}',
+                      style: textTheme.titleMedium,
                     ),
-                ],
+                    if (_tempSelected.isNotEmpty)
+                      TextButton(
+                        onPressed: () {
+                          setState(() {
+                            _tempSelected.clear();
+                          });
+                        },
+                        child: Text(widget.clearLabel),
+                      ),
+                  ],
+                ),
               ),
-            ),
 
-            Gap.hSm,
-            Flexible(
-              child: ListView.builder(
-                shrinkWrap: true,
-                itemCount: widget.items.length,
-                padding: SpacingUtils.onlyBottom(AppSpacings.hLg),
-                itemBuilder: (context, index) {
-                  final item = widget.items[index];
-                  final isSelected = _tempSelected.contains(item);
+              Gap.hSm,
+              Flexible(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: widget.items.length,
+                  padding: SpacingUtils.onlyBottom(AppSpacings.hLg),
+                  itemBuilder: (context, index) {
+                    final item = widget.items[index];
+                    final isSelected = _tempSelected.contains(item);
 
-                  return InkWell(
-                    onTap: () => _toggleSelection(item),
-                    child: Container(
-                      padding:
-                          SpacingUtils.horizontal(AppSpacings.wMd) +
-                          SpacingUtils.vertical(AppSpacings.hSm),
-                      child: Row(
-                        children: [
-                          Checkbox(
-                            value: isSelected,
-                            onChanged: (_) => _toggleSelection(item),
-                            activeColor: colors.primary,
-                          ),
-                          Gap.hSm,
-                          Expanded(
-                            child: Text(
-                              widget.itemLabel(item),
-                              style: textTheme.bodyLarge?.copyWith(
-                                color: colors.onSurface,
+                    return InkWell(
+                      onTap: () => _toggleSelection(item),
+                      child: Container(
+                        padding:
+                            SpacingUtils.horizontal(AppSpacings.wMd) +
+                            SpacingUtils.vertical(AppSpacings.hSm),
+                        child: Row(
+                          children: [
+                            Checkbox(
+                              value: isSelected,
+                              onChanged: (_) => _toggleSelection(item),
+                              activeColor: colors.primary,
+                            ),
+                            Gap.hSm,
+                            Expanded(
+                              child: Text(
+                                widget.itemLabel(item),
+                                style: textTheme.bodyLarge?.copyWith(
+                                  color: colors.onSurface,
+                                ),
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                  );
-                },
+                    );
+                  },
+                ),
               ),
-            ),
 
-            Padding(
-              padding: SpacingUtils.all(AppSpacings.wMd),
-              child: CustomButton(
-                text: widget.confirmLabel,
-                onPressed: () {
-                  // A copy: _tempSelected keeps being mutated by this sheet, so
-                  // handing the caller the live list would let a later tap edit
-                  // what it already stored.
-                  widget.onChanged(List<T>.from(_tempSelected));
-                  Navigator.pop(context);
-                },
+              Padding(
+                padding: SpacingUtils.all(AppSpacings.wMd),
+                child: CustomButton(
+                  text: widget.confirmLabel,
+                  onPressed: () {
+                    // A copy: _tempSelected keeps being mutated by this sheet, so
+                    // handing the caller the live list would let a later tap edit
+                    // what it already stored.
+                    widget.onChanged(List<T>.from(_tempSelected));
+                    Navigator.pop(context);
+                  },
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

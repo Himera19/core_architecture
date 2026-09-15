@@ -1,31 +1,25 @@
 import 'package:intl/intl.dart';
 
+/// Date arithmetic and formatting.
+///
+/// Every name and pattern comes from `intl` for a locale you pass, rather than
+/// from a list baked into the package. Until 6.0.0 the day and month names
+/// were fixed Turkish and the date pattern fixed `dd.MM.yyyy`, which quietly
+/// made the language decision for every app using it — while the rest of this
+/// class carefully took its labels as parameters.
+///
+/// [locale] defaults to `Intl.defaultLocale`, so setting that once in `main()`
+/// covers the whole app:
+///
+/// ```dart
+/// Intl.defaultLocale = 'tr_TR';
+/// DateHelper.getDayName(1);   // Pazartesi
+/// DateHelper.getDayName(1, locale: 'en_US');   // Monday
+/// ```
+///
+/// A locale other than `en` needs its data loaded first — see
+/// `initializeDateFormatting` in `package:intl`.
 class DateHelper {
-  static const List<String> dayNames = [
-    'Pazartesi',
-    'Salı',
-    'Çarşamba',
-    'Perşembe',
-    'Cuma',
-    'Cumartesi',
-    'Pazar',
-  ];
-
-  static const List<String> monthNames = [
-    'Ocak',
-    'Şubat',
-    'Mart',
-    'Nisan',
-    'Mayıs',
-    'Haziran',
-    'Temmuz',
-    'Ağustos',
-    'Eylül',
-    'Ekim',
-    'Kasım',
-    'Aralık',
-  ];
-
   // ====================
   // TIME FORMAT HELPERS
   // ====================
@@ -38,17 +32,26 @@ class DateHelper {
     return '${hour.toString().padLeft(2, '0')}:${min.toString().padLeft(2, '0')}';
   }
 
-  /// dd.MM.yyyy  (DATE ONLY)
-  static String formatDate(DateTime date) =>
-      DateFormat('dd.MM.yyyy').format(date);
+  /// Date only, `dd.MM.yyyy` unless [pattern] says otherwise.
+  static String formatDate(
+    DateTime date, {
+    String pattern = 'dd.MM.yyyy',
+    String? locale,
+  }) => DateFormat(pattern, locale).format(date);
 
-  /// HH:mm (SADECE SAAT)
-  static String formatTime(DateTime time) =>
-      DateFormat('HH:mm').format(time);
+  /// Time only, `HH:mm` unless [pattern] says otherwise.
+  static String formatTime(
+    DateTime time, {
+    String pattern = 'HH:mm',
+    String? locale,
+  }) => DateFormat(pattern, locale).format(time);
 
-  /// dd.MM.yyyy HH:mm  (DATE + TIME)
-  static String formatDateTime(DateTime dateTime) =>
-      DateFormat('dd.MM.yyyy HH:mm').format(dateTime);
+  /// Date and time, `dd.MM.yyyy HH:mm` unless [pattern] says otherwise.
+  static String formatDateTime(
+    DateTime dateTime, {
+    String pattern = 'dd.MM.yyyy HH:mm',
+    String? locale,
+  }) => DateFormat(pattern, locale).format(dateTime);
 
   // ====================
   // GREETING
@@ -151,9 +154,34 @@ class DateHelper {
     return List.generate(last.day, (i) => first.add(Duration(days: i)));
   }
 
-  static String getDayName(int weekday) =>
-      (weekday >= 1 && weekday <= 7) ? dayNames[weekday - 1] : '';
+  /// The name of [weekday], 1 = Monday through 7 = Sunday, in [locale].
+  ///
+  /// Empty string for anything outside that range, so a caller can pass a
+  /// value straight from `DateTime.weekday` without checking it first.
+  static String getDayName(int weekday, {String? locale}) {
+    if (weekday < 1 || weekday > 7) return '';
 
-  static String getMonthName(int month) =>
-      (month >= 1 && month <= 12) ? monthNames[month - 1] : '';
+    // 2024-01-01 was a Monday, so adding weekday - 1 lands on the day wanted
+    // without needing a table of names.
+    final DateTime reference = DateTime(2024, 1, weekday);
+    return DateFormat.EEEE(locale).format(reference);
+  }
+
+  /// The name of [month], 1 = January through 12 = December, in [locale].
+  static String getMonthName(int month, {String? locale}) {
+    if (month < 1 || month > 12) return '';
+    return DateFormat.MMMM(locale).format(DateTime(2024, month));
+  }
+
+  /// Every weekday name, Monday first, in [locale].
+  static List<String> dayNames({String? locale}) => [
+    for (int weekday = 1; weekday <= 7; weekday++)
+      getDayName(weekday, locale: locale),
+  ];
+
+  /// Every month name, January first, in [locale].
+  static List<String> monthNames({String? locale}) => [
+    for (int month = 1; month <= 12; month++)
+      getMonthName(month, locale: locale),
+  ];
 }

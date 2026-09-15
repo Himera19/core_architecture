@@ -42,6 +42,25 @@ class CustomButton extends StatelessWidget {
   /// Give it a bounded size: the button is only as tall as its [size].
   final Widget? loadingIndicator;
 
+  /// Whether the button takes the full width it is offered.
+  ///
+  /// True is the shape most screens want — a button at the bottom of a form.
+  /// It used to be the only shape, which made two buttons side by side
+  /// impossible without wrapping each in an [Expanded] and left
+  /// `mainAxisSize.min` rows stretched to the edge of the screen. Pass false
+  /// to size to the label instead:
+  ///
+  /// ```dart
+  /// Row(
+  ///   children: [
+  ///     CustomButton(text: 'Cancel', fullWidth: false, type: ButtonType.outlined, onPressed: back),
+  ///     Gap.wSm,
+  ///     CustomButton(text: 'Save', fullWidth: false, onPressed: save),
+  ///   ],
+  /// );
+  /// ```
+  final bool fullWidth;
+
   const CustomButton({
     super.key,
     required this.text,
@@ -51,6 +70,7 @@ class CustomButton extends StatelessWidget {
     this.isLoading = false,
     this.icon,
     this.loadingIndicator,
+    this.fullWidth = true,
   });
 
   @override
@@ -64,7 +84,9 @@ class CustomButton extends StatelessWidget {
 
     return SizedBox(
       height: resolvedHeight,
-      width: double.infinity,
+      // Null, not zero: an unset width lets the button size to its label,
+      // where `double.infinity` forced every one of them edge to edge.
+      width: fullWidth ? double.infinity : null,
       child: ElevatedButton(
         // Null, not an empty callback: a loading button used to stay enabled
         // as far as Material was concerned — it rippled, showed a click
@@ -79,8 +101,11 @@ class CustomButton extends StatelessWidget {
           // greys out the usual way, because these are then left unset.
           disabledBackgroundColor: isLoading ? style.background : null,
           disabledForegroundColor: isLoading ? style.foreground : null,
+          // AppRadius.lg, matching what AppTheme gives every Material button.
+          // This used to be AppRadius.md, so a CustomButton and a FilledButton
+          // on the same screen had different corners.
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadius.md),
+            borderRadius: BorderRadius.circular(AppRadius.lg),
             side: style.border,
           ),
           padding:

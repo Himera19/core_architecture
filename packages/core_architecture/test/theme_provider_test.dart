@@ -42,7 +42,13 @@ class _FakeStorage implements StorageService {
 
 ProviderContainer _containerWith(_FakeStorage storage) {
   final container = ProviderContainer(
-    overrides: [storageServiceProvider.overrideWithValue(storage)],
+    overrides: [
+      preferencesStorageProvider.overrideWithValue(storage),
+      // Faked as well: the notifier reads the keystore once, to carry across
+      // a value written before 6.0.0, and a real one would reach for a
+      // platform channel no test host has.
+      secureStorageProvider.overrideWithValue(_FakeStorage()),
+    ],
   );
   addTearDown(container.dispose);
   return container;

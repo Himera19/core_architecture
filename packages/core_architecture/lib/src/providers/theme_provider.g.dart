@@ -8,24 +8,39 @@ part of 'theme_provider.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// Manages the app theme mode with secure persistence.
+/// Manages the app theme mode, persisted as a preference.
 ///
 /// Uses [StorageService] and [LoggerService] via Riverpod DI,
 /// making it fully testable and consistent with the architecture.
+///
+/// [build] returns [ThemeMode.light] synchronously and loads the persisted
+/// mode in the background, so the first frame never waits on storage.
+/// A mode the user picks while that read is still in flight wins — see
+/// [_loadTheme].
 
 @ProviderFor(ThemeNotifier)
 const themeProvider = ThemeNotifierProvider._();
 
-/// Manages the app theme mode with secure persistence.
+/// Manages the app theme mode, persisted as a preference.
 ///
 /// Uses [StorageService] and [LoggerService] via Riverpod DI,
 /// making it fully testable and consistent with the architecture.
+///
+/// [build] returns [ThemeMode.light] synchronously and loads the persisted
+/// mode in the background, so the first frame never waits on storage.
+/// A mode the user picks while that read is still in flight wins — see
+/// [_loadTheme].
 final class ThemeNotifierProvider
     extends $NotifierProvider<ThemeNotifier, ThemeMode> {
-  /// Manages the app theme mode with secure persistence.
+  /// Manages the app theme mode, persisted as a preference.
   ///
   /// Uses [StorageService] and [LoggerService] via Riverpod DI,
   /// making it fully testable and consistent with the architecture.
+  ///
+  /// [build] returns [ThemeMode.light] synchronously and loads the persisted
+  /// mode in the background, so the first frame never waits on storage.
+  /// A mode the user picks while that read is still in flight wins — see
+  /// [_loadTheme].
   const ThemeNotifierProvider._()
     : super(
         from: null,
@@ -53,12 +68,17 @@ final class ThemeNotifierProvider
   }
 }
 
-String _$themeNotifierHash() => r'3b1645b76fc33b221c666b61404939243b004c1b';
+String _$themeNotifierHash() => r'3ab9e3b238b272bbf83dff22a2ebd45b5d8987be';
 
-/// Manages the app theme mode with secure persistence.
+/// Manages the app theme mode, persisted as a preference.
 ///
 /// Uses [StorageService] and [LoggerService] via Riverpod DI,
 /// making it fully testable and consistent with the architecture.
+///
+/// [build] returns [ThemeMode.light] synchronously and loads the persisted
+/// mode in the background, so the first frame never waits on storage.
+/// A mode the user picks while that read is still in flight wins — see
+/// [_loadTheme].
 
 abstract class _$ThemeNotifier extends $Notifier<ThemeMode> {
   ThemeMode build();

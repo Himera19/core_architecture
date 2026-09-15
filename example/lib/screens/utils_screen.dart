@@ -157,30 +157,37 @@ class _UtilsScreenState extends State<UtilsScreen> {
             ),
             Gap.hSm,
 
-            // dayNames, used the way a week header uses them.
-            Row(
-              children: [
-                for (int weekday = 1; weekday <= 7; weekday++)
-                  Expanded(
-                    child: Container(
-                      padding: SpacingUtils.vertical(AppSpacings.hXxs),
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: weekday == _picked.weekday
-                            ? colors.primaryContainer
-                            : null,
-                        borderRadius: RadiusUtils.all(AppRadius.sm),
-                      ),
-                      child: Text(
-                        // The names are Turkish in the package; three letters
-                        // is what a week header has room for.
-                        DateHelper.getDayName(weekday).substring(0, 3),
-                        style: AppTypography.labelSm,
+            // A week header from dayNames, in whichever locale is asked for —
+            // the names come from intl now, not from a list baked into the
+            // package.
+            for (final locale in const ['en_US', 'tr']) ...[
+              Text(locale, style: AppTypography.labelSm),
+              Gap.hXxs,
+              Row(
+                children: [
+                  for (final (index, name)
+                      in DateHelper.dayNames(locale: locale).indexed)
+                    Expanded(
+                      child: Container(
+                        padding: SpacingUtils.vertical(AppSpacings.hXxs),
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: index + 1 == _picked.weekday
+                              ? colors.primaryContainer
+                              : null,
+                          borderRadius: RadiusUtils.all(AppRadius.sm),
+                        ),
+                        child: Text(
+                          // Three letters is what a week header has room for.
+                          name.substring(0, 3),
+                          style: AppTypography.labelSm,
+                        ),
                       ),
                     ),
-                  ),
-              ],
-            ),
+                ],
+              ),
+              Gap.hSm,
+            ],
           ],
         ),
 

@@ -1,5 +1,6 @@
 import 'package:core_architecture/core_architecture.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'router.dart';
 import 'showcase/pulsing_dots.dart';
 
@@ -10,11 +11,16 @@ const Color brandColor = Color.fromARGB(255, 93, 27, 154);
 
 Future<void> main() async {
   await CoreInitializer.quickStart(appName: appName);
-  runApp(const ProviderScope(child: HobbyApp()));
+
+  // DateHelper reads its day and month names from intl, so a locale other
+  // than English needs its symbols loaded first. The Utils screen shows two.
+  await initializeDateFormatting();
+
+  runApp(const ProviderScope(child: CoreArchitectureDemo()));
 }
 
-class HobbyApp extends ConsumerWidget {
-  const HobbyApp({super.key});
+class CoreArchitectureDemo extends ConsumerWidget {
+  const CoreArchitectureDemo({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

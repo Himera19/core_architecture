@@ -13,7 +13,11 @@ Future<void> pumpInBox(
   await tester.pumpWidget(
     MaterialApp(
       theme: theme ?? AppTheme.light(),
-      home: Scaffold(body: Center(child: SizedBox(width: width, child: child))),
+      home: Scaffold(
+        body: Center(
+          child: SizedBox(width: width, child: child),
+        ),
+      ),
     ),
   );
   await tester.pump();
@@ -62,7 +66,11 @@ void main() {
           ),
         );
 
-        expect(tester.takeException(), isNull, reason: '${size.name} overflowed');
+        expect(
+          tester.takeException(),
+          isNull,
+          reason: '${size.name} overflowed',
+        );
       }
     });
 
@@ -151,10 +159,7 @@ void main() {
     });
 
     testWidgets('is absent when the button is idle', (tester) async {
-      await pumpInBox(
-        tester,
-        CustomButton(text: 'Save', onPressed: () {}),
-      );
+      await pumpInBox(tester, CustomButton(text: 'Save', onPressed: () {}));
 
       expect(find.byType(CircularProgressIndicator), findsNothing);
       expect(find.text('Save'), findsOneWidget);
@@ -240,11 +245,7 @@ void main() {
 
       await pumpInBox(
         tester,
-        CustomButton(
-          text: 'Save',
-          isLoading: true,
-          onPressed: () => taps++,
-        ),
+        CustomButton(text: 'Save', isLoading: true, onPressed: () => taps++),
       );
 
       // It used to be handed an empty closure, which left Material treating it
@@ -295,5 +296,74 @@ void main() {
       // Left unset, so Material's own disabled colours apply.
       expect(style?.backgroundColor?.resolve({WidgetState.disabled}), isNull);
     });
+  });
+
+  group('width', () {
+    // Wrapped in an Align, which passes loose constraints. The SizedBox in
+    // pumpInBox alone is a tight width, and a tight constraint overrides
+    // whatever the button asks for — so both cases would measure 200 and the
+    // test would prove nothing.
+    Widget loose(Widget child) =>
+        Align(alignment: Alignment.centerLeft, child: child);
+
+    testWidgets('fills what it is offered by default', (tester) async {
+      await pumpInBox(tester, loose(CustomButton(text: 'OK', onPressed: () {})));
+
+      expect(tester.getSize(find.byType(ElevatedButton)).width, 200);
+    });
+
+    testWidgets('sizes to its label when told not to fill', (tester) async {
+      await pumpInBox(
+        tester,
+        loose(CustomButton(text: 'OK', fullWidth: false, onPressed: () {})),
+      );
+
+      expect(tester.getSize(find.byType(ElevatedButton)).width, lessThan(200));
+    });
+
+    testWidgets('two of them fit side by side in a Row', (tester) async {
+      // The whole point of fullWidth: false. With the old forced
+      // double.infinity this threw, because two infinite children cannot
+      // share a bounded Row.
+      await pumpInBox(
+        tester,
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CustomButton(
+              text: 'Cancel',
+              fullWidth: false,
+              type: ButtonType.outlined,
+              onPressed: () {},
+            ),
+            const SizedBox(width: AppSpacings.wSm),
+            CustomButton(text: 'Save', fullWidth: false, onPressed: () {}),
+          ],
+        ),
+        width: 400,
+      );
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('Cancel'), findsOneWidget);
+      expect(find.text('Save'), findsOneWidget);
+    });
+  });
+
+  testWidgets('its corners match the ones AppTheme gives Material buttons', (
+    tester,
+  ) async {
+    // These were AppRadius.md while the theme used AppRadius.lg, so a
+    // CustomButton and a FilledButton on one screen had different corners.
+    await pumpInBox(tester, CustomButton(text: 'OK', onPressed: () {}));
+
+    final RoundedRectangleBorder shape =
+        tester
+                .widget<ElevatedButton>(find.byType(ElevatedButton))
+                .style
+                ?.shape
+                ?.resolve({})
+            as RoundedRectangleBorder;
+
+    expect(shape.borderRadius, BorderRadius.circular(AppRadius.lg));
   });
 }

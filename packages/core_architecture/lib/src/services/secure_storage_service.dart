@@ -48,7 +48,12 @@ class SecureStorageService implements StorageService {
       }
 
       final value = await _secureStorage.read(key: key);
-      _cache[key] = value;
+
+      // Only a hit is remembered. A cached miss never expired, so a key
+      // written by anything other than this instance — the native side, a
+      // fresh login, a second instance — stayed invisible for the life of
+      // the app.
+      if (value != null) _cache[key] = value;
 
       _logger.d('Read: $key ${value != null ? '(found)' : '(null)'}', tag: 'Storage');
       return value;

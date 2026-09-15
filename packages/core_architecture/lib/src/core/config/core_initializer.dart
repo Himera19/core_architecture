@@ -58,9 +58,9 @@ class CoreInitializer {
 
       // Load environment
       await _loadEnvironment(config.envFile);
-
-      // Initialize storage
-      _logger.i('[✓] Storage service initialized', tag: 'Core');
+      // No storage line here: nothing is initialized for it. Both stores
+      // resolve lazily on first use, so claiming otherwise only made the
+      // startup log harder to trust.
 
       _isInitialized = true;
       _logger.i('========== INITIALIZATION COMPLETE ==========', tag: 'Core');

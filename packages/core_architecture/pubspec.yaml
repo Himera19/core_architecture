@@ -1,6 +1,6 @@
 name: core_architecture
 description: Backend-agnostic core architecture for Flutter projects — design system, theming, responsive layer, storage, logging and shared providers.
-version: 5.1.1
+version: 6.0.0
 publish_to: 'none'
 resolution: workspace
 
@@ -20,7 +20,8 @@ dependencies:
   riverpod_annotation: ^3.0.3
 
   # Storage
-  flutter_secure_storage: ^9.2.4
+  flutter_secure_storage: ^9.2.4   # secrets only
+  shared_preferences: ^2.5.3       # settings
 
   # Logging
   logger: ^2.6.2

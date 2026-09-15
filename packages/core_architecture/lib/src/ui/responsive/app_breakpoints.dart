@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import '../tokens/app_spacings.dart';
 
 /// Material 3 Window Size Classes
 ///
@@ -50,23 +51,26 @@ final class AppBreakpoints {
     };
   }
 
-  /// Recommended body margin per breakpoint
+  /// Recommended body margin per breakpoint.
+  ///
+  /// Drawn from [AppSpacings] rather than written as literals, so a change to
+  /// the ramp reaches the layout guidance with it.
   static double margin(WindowSizeClass sizeClass) {
     return switch (sizeClass) {
-      WindowSizeClass.compact => 16,
-      WindowSizeClass.medium => 24,
-      WindowSizeClass.expanded => 24,
-      WindowSizeClass.large => 24,
+      WindowSizeClass.compact => AppSpacings.wMd,
+      WindowSizeClass.medium => AppSpacings.wLg,
+      WindowSizeClass.expanded => AppSpacings.wLg,
+      WindowSizeClass.large => AppSpacings.wLg,
     };
   }
 
   /// Recommended gutter width per breakpoint
   static double gutter(WindowSizeClass sizeClass) {
     return switch (sizeClass) {
-      WindowSizeClass.compact => 8,
-      WindowSizeClass.medium => 16,
-      WindowSizeClass.expanded => 16,
-      WindowSizeClass.large => 24,
+      WindowSizeClass.compact => AppSpacings.wXs,
+      WindowSizeClass.medium => AppSpacings.wMd,
+      WindowSizeClass.expanded => AppSpacings.wMd,
+      WindowSizeClass.large => AppSpacings.wLg,
     };
   }
 }
