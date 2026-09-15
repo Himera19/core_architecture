@@ -391,7 +391,8 @@ Every package is versioned together. To cut a release:
 2. `melos run analyze` and `melos run test`.
 3. Bump `version:` in each `packages/*/pubspec.yaml`.
 4. Update the `ref:` in the backend packages' `core_architecture` git dependency to match.
-5. Tag and push: `git tag v2.0.0 && git push && git push --tags`.
+5. Tag and push: `git tag vX.Y.Z && git push && git push --tags` — the tag must match the
+   `version:` and `ref:` values from steps 3 and 4.
 
 The `ref` in a package's git dependency must point at a tag that exists on GitHub — until the
 tag is pushed, consumers outside the repo cannot resolve the backend packages.
