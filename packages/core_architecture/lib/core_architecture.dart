@@ -33,6 +33,7 @@ export 'src/services/secure_storage_service.dart';
 
 // ==================== UI Layer ====================
 // Themes
+export 'src/ui/themes/app_theme.dart';
 export 'src/ui/themes/light_theme.dart';
 export 'src/ui/themes/dark_theme.dart';
 export 'src/ui/themes/app_color_scheme.dart';

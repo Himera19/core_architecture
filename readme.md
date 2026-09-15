@@ -43,7 +43,7 @@ onboarding-seen state are Riverpod notifiers that persist themselves.
 **One design system instead of scattered magic numbers.** Nine token files (colors, spacing,
 sizes, typography, radius, borders, elevations, durations, opacities), `lightTheme` / `darkTheme`
 built from them, Material 3 window size classes (`compact` / `medium` / `expanded` / `large`)
-with `ResponsiveBuilder` and `ResponsiveValue`, plus `Gap`, `Validators`, `InputFormatters`,
+with `ResponsiveBuilder` and `ResponsiveValue`, plus `Gap`, `Validators`, `TurkishPhoneFormatter`,
 `DateHelper` and `context.colorScheme` / `context.showError()` extensions.
 
 **You pay only for what you import.** The core has no backend or vendor SDK. Add a backend
@@ -101,7 +101,7 @@ dependencies:
     git:
       url: https://github.com/Himera19/core_architecture.git
       path: packages/core_architecture
-      ref: v2.0.0
+      ref: v3.0.0
 ```
 
 ```dart
@@ -119,7 +119,7 @@ dependencies:
     git:
       url: https://github.com/Himera19/core_architecture.git
       path: packages/core_architecture_supabase
-      ref: v2.0.0
+      ref: v3.0.0
 ```
 
 ```dart
@@ -134,7 +134,7 @@ dependencies:
     git:
       url: https://github.com/Himera19/core_architecture.git
       path: packages/core_architecture_dio
-      ref: v2.0.0
+      ref: v3.0.0
 ```
 
 ```dart
@@ -401,11 +401,95 @@ tag is pushed, consumers outside the repo cannot resolve the backend packages.
 
 ## Documentation
 
-* [`packages/core_architecture/README.md`](packages/core_architecture/README.md) — design tokens, themes, responsive system, widgets, utilities, providers, feature conventions
+* [`packages/core_architecture/README.md`](packages/core_architecture/README.md) — the full reference. Jump to:
+  [design tokens](packages/core_architecture/README.md#design-tokens) ·
+  [themes](packages/core_architecture/README.md#themes) ·
+  [shared widgets](packages/core_architecture/README.md#shared-widgets) ·
+  [utilities](packages/core_architecture/README.md#utilities) ·
+  [responsive system](packages/core_architecture/README.md#responsive-system) ·
+  [providers](packages/core_architecture/README.md#providers) ·
+  [feature conventions](packages/core_architecture/README.md#feature-architecture-convention)
 * [`packages/core_architecture_supabase/README.md`](packages/core_architecture_supabase/README.md) — Supabase setup, auth, CRUD
 * [`packages/core_architecture_dio/README.md`](packages/core_architecture_dio/README.md) — REST setup, interceptors, CRUD
 
 Each package keeps its own `CHANGELOG.md`; `melos version` appends to them.
+
+---
+
+## Design system
+
+Every token, theme and widget lives in `core_architecture`, so it is available from whichever
+package you imported — the backend packages re-export it.
+
+```dart
+import 'package:core_architecture/core_architecture.dart';
+// …or, if you use a backend package, it is already in scope:
+// import 'package:core_architecture_supabase/core_architecture_supabase.dart';
+```
+
+**Tokens** are `const` namespaces — no context, no setup, just `ClassName.member`:
+
+```dart
+Container(
+  padding: EdgeInsets.all(AppSpacings.rMd),           // 16
+  decoration: BoxDecoration(
+    borderRadius: BorderRadius.circular(AppRadius.lg), // 16
+    boxShadow: AppElevations.shadowMd,
+    border: Border.all(width: AppBorders.thin, color: context.colorScheme.outline),
+  ),
+  child: Text('Hello', style: AppTypography.titleMd),
+);
+```
+
+| Token class | Holds | Example |
+| --- | --- | --- |
+| `AppColors` | brand, surface, text, border, status colors | `AppColors.primary` · `AppColors.success` |
+| `AppTypography` | 15-step `TextStyle` scale + `fontFamily` | `AppTypography.bodyMd` |
+| `AppSpacings` | `w*` / `h*` / `r*` ramps, 4 → 40 | `AppSpacings.rMd` |
+| `AppSizes` | icons, buttons, avatars, cards, dialogs | `AppSizes.iconSm` |
+| `AppRadius` | corner radii, 4 / 8 / 16 / 24 | `AppRadius.lg` |
+| `AppBorders` | border **widths**, 1 / 2 / 3 | `AppBorders.normal` |
+| `AppDurations` | animation durations | `AppDurations.normal` |
+| `AppElevations` | elevation levels + `BoxShadow` presets | `AppElevations.shadowMd` |
+| `AppOpacities` | **alpha ints (0–255)** for `withAlpha` | `AppOpacities.low` |
+
+**Themes** are built from those tokens and driven by a persisted provider:
+
+```dart
+MaterialApp(
+  theme: lightTheme,
+  darkTheme: darkTheme,
+  themeMode: ref.watch(themeProvider),   // saved to secure storage
+);
+
+await ref.read(themeProvider.notifier).toggleTheme();
+```
+
+Inside widgets, prefer the theme over raw color tokens — it already flips between modes:
+
+```dart
+context.colorScheme.primary
+context.textTheme.titleLarge
+context.showSuccess('Saved');
+```
+
+Re-brand through `AppTheme` rather than editing the package — the token classes are `final` and
+cannot be subclassed:
+
+```dart
+MaterialApp(
+  theme:     AppTheme.light(brandColor: myPurple, fontFamily: 'Inter'),
+  darkTheme: AppTheme.dark(brandColor: myPurple,  fontFamily: 'Inter'),
+  themeMode: ref.watch(themeProvider),
+);
+```
+
+`brandColor` moves only the accent slots — the neutral Slate palette stays put — and derives its
+tones from `ColorScheme.fromSeed`, so the `on*` pairs stay readable for any seed. For anything
+else, `copyWith` on the result composes as usual.
+
+Full reference — every value, every widget parameter, and the customization rules:
+[`packages/core_architecture/README.md`](packages/core_architecture/README.md#design-tokens).
 
 ---
 
