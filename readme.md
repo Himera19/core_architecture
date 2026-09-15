@@ -4,7 +4,7 @@ Modular Flutter architecture on **Riverpod 3**: a backend-agnostic core plus opt
 packages. Design tokens, themes, responsive layout, storage, logging and a typed error hierarchy —
 versioned as a dependency instead of copy-pasted into every new `lib/core/`.
 
-**v5.1.1** · MIT · Flutter ≥ 3.16 · Dart ≥ 3.8
+**v6.0.0** · MIT · Flutter ≥ 3.16 · Dart ≥ 3.8
 
 **[▶ Live demo](https://himera19.github.io/core_architecture/)** — every feature of `core_architecture` running in the browser.
 
@@ -50,7 +50,7 @@ dependencies:
     git:
       url: https://github.com/Himera19/core_architecture.git
       path: packages/core_architecture_supabase
-      ref: v5.1.1
+      ref: v6.0.0
 ```
 
 | Package | `path:` | Import |
