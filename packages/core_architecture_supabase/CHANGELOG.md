@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.0.0
+
+Version bump to track `core_architecture` 3.0.0. This package's own API is unchanged, but the
+core it re-exports no longer ships `CustomAppBar`, `Navbar` or `go_router`.
+
 ## 2.0.0
 
 Initial release. The Supabase backend was extracted from `core_architecture` v1.x so that
