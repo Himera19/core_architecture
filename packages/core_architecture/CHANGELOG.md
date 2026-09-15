@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+### Breaking
+
+- Removed the `CustomAppBar` and `Navbar` widgets, along with the `NavigationItem` model. Both
+  were built on `go_router` (`context.pop()`, `context.go()`, `GoRouterState.of()`), which forced
+  a router choice on every consumer of an otherwise routing-agnostic package. Rebuild them in
+  your app with Flutter's `AppBar` / `NavigationBar` and the design tokens here.
+- Dropped the `go_router` dependency and its re-export from
+  `package:core_architecture/core_architecture.dart`. Apps that used `GoRouter`, `GoRoute` or
+  `context.go()` through this barrel must now depend on `go_router` directly and import it
+  themselves.
+
 ## 2.0.0
 
 The package was split out of a single `core_architecture` package into a Melos-managed

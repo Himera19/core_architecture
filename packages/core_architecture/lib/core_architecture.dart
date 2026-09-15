@@ -55,11 +55,9 @@ export 'src/ui/responsive/responsive_value.dart';
 export 'src/ui/responsive/platform_info.dart';
 
 // Widgets
-export 'src/ui/widgets/custom_app_bar.dart';
 export 'src/ui/widgets/custom_button.dart';
 export 'src/ui/widgets/custom_text_field.dart';
 export 'src/ui/widgets/custom_dropdown.dart';
-export 'src/ui/widgets/navbar.dart';
 
 // ==================== Utils ====================
 export 'src/utils/border_utils.dart';
@@ -77,4 +75,3 @@ export 'src/utils/extensions/context_extensions.dart';
 
 // ==================== External Packages (Re-export) ====================
 export 'package:flutter_riverpod/flutter_riverpod.dart';
-export 'package:go_router/go_router.dart';

@@ -11,6 +11,55 @@ backend-agnostic core plus optional backend packages.
 
 ---
 
+## Why use it
+
+Every new Flutter app starts with the same `lib/core/` folder: initialization, secure storage, a
+logger, a `Failure` type, spacing constants, a light and dark theme, a responsive helper. It gets
+copy-pasted from the last project and drifts from it immediately. This is that folder, versioned
+and shared instead of duplicated.
+
+**Your feature code never names a backend.** Repositories depend on `CrudContract` — `query`,
+`getById`, `insert`, `update`, `delete`, `upsert` — and `core_architecture_supabase` /
+`core_architecture_dio` implement it. Moving from Supabase to a REST API, or running both side by
+side, changes which provider you inject, not the features:
+
+```dart
+class ProductRepository {
+  ProductRepository(this._client);
+  final CrudContract _client;   // not SupabaseClient, not Dio
+}
+```
+
+**Errors are typed, not `catch (e)`.** Ten `Failure` types for the UI layer
+(`NetworkFailure`, `AuthFailure`, `ValidationFailure`, `UnknownFailure`, …) and nine matching
+`AppException` types for the data layer, so a failed call is something you can switch on instead
+of a string you parse.
+
+**The plumbing is already wired.** `CoreInitializer.quickStart()` sets up the Flutter binding,
+loads `.env`, and brings up storage and logging in one call. `StorageService` is an abstract
+interface with a `flutter_secure_storage` implementation behind it. Theme mode and
+onboarding-seen state are Riverpod notifiers that persist themselves.
+
+**One design system instead of scattered magic numbers.** Nine token files (colors, spacing,
+sizes, typography, radius, borders, elevations, durations, opacities), `lightTheme` / `darkTheme`
+built from them, Material 3 window size classes (`compact` / `medium` / `expanded` / `large`)
+with `ResponsiveBuilder` and `ResponsiveValue`, plus `Gap`, `Validators`, `InputFormatters`,
+`DateHelper` and `context.colorScheme` / `context.showError()` extensions.
+
+**You pay only for what you import.** The core has no backend or vendor SDK. Add a backend
+package only if you need one.
+
+### What it is not
+
+- **Not a state management library.** That is Riverpod 3, which this re-exports and builds on.
+- **Not a router.** No routes, no navigation widgets, no router dependency — bring your own.
+- **Not a starter template.** It is a dependency you upgrade, not a folder you fork and edit.
+- **Opinionated.** Riverpod for DI and state, secure storage for persistence, `Failure` for error
+  handling. If your app already disagrees with those, the useful part is the `CrudContract` idea,
+  not the package.
+
+---
+
 ## Packages
 
 | Package | Adds | Depends on |
@@ -38,6 +87,11 @@ to Supabase *and* a REST API.
 
 All packages are consumed as **git dependencies**. Pin a tag with `ref` so your builds are
 reproducible.
+
+Add the dependency, then run **`flutter pub get`** as usual. Melos is only for developing this
+monorepo (see [Working on the monorepo](#working-on-the-monorepo)) — running `melos bootstrap`
+in your own app fails with *"Your current directory does not appear to be within a Melos
+workspace"*, which is expected.
 
 ### Core only — no backend
 
@@ -158,6 +212,24 @@ void main() async {
 
 ### 3. Wire up the app
 
+These packages are **routing-agnostic**: no routes, no navigation widgets, no router dependency.
+Pick your own router and add it to your app's `pubspec.yaml`. With `go_router`, for example:
+
+```dart
+// lib/router.dart
+import 'package:core_architecture/core_architecture.dart';
+import 'package:go_router/go_router.dart';
+
+final Provider<GoRouter> routerProvider = Provider<GoRouter>(
+  (Ref ref) => GoRouter(
+    initialLocation: '/',
+    routes: <RouteBase>[
+      GoRoute(path: '/', builder: (_, _) => const HomeScreen()),
+    ],
+  ),
+);
+```
+
 ```dart
 class MyApp extends ConsumerWidget {
   const MyApp({super.key});
@@ -165,14 +237,27 @@ class MyApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return MaterialApp.router(
-      routerConfig: ref.read(routeConfigProvider),
       title: 'MyApp',
+      routerConfig: ref.read(routerProvider),
       theme: lightTheme,
       darkTheme: darkTheme,
-      themeMode: ref.watch(themeProvider),
+      themeMode: ref.watch(themeProvider),   // ThemeMode, persisted by the core
     );
   }
 }
+```
+
+No router at all? A plain `MaterialApp` works the same way — only `routerConfig` is
+router-specific:
+
+```dart
+MaterialApp(
+  title: 'MyApp',
+  home: const HomeScreen(),
+  theme: lightTheme,
+  darkTheme: darkTheme,
+  themeMode: ref.watch(themeProvider),
+)
 ```
 
 ---

@@ -34,9 +34,6 @@ dependencies:
   # Environment
   flutter_dotenv: ^6.0.0
 
-  # Routing
-  go_router: ^16.3.0
-
   # URL Launcher
   url_launcher: ^6.3.2
 

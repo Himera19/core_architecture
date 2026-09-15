@@ -59,12 +59,17 @@ can be called on their own or after `CoreInitializer`.
 Configure your `MaterialApp` theme:
 
 ```dart
-MaterialApp.router(
+MaterialApp(
+  home: const HomeScreen(),
   theme: lightTheme,
   darkTheme: darkTheme,
   themeMode: ref.watch(themeProvider),
 )
 ```
+
+This package is **routing-agnostic** — it has no routes, no navigation widgets and no router
+dependency. Use whatever you like (`Navigator`, `go_router`, `auto_route`); with
+`MaterialApp.router`, pass your own `routerConfig` and keep the three theme arguments unchanged.
 
 ---
 
@@ -87,7 +92,7 @@ lib/src/
 │   ├── responsive/        # Breakpoints, ResponsiveBuilder, ResponsiveValue, PlatformInfo
 │   ├── themes/            # lightTheme, darkTheme, AppColorScheme
 │   ├── tokens/            # Colors, Typography, Spacings, Sizes, Radius, Borders, …
-│   └── widgets/           # CustomAppBar, CustomButton, CustomTextField, …
+│   └── widgets/           # CustomButton, CustomTextField, CustomDropdown
 └── utils/
     ├── extensions/        # ContextExtensions
     └── …                  # Gap, Validators, InputFormatters, DateHelper, …
@@ -256,11 +261,13 @@ Both persist the choice through `StorageService`.
 
 | Widget | Description |
 |---|---|
-| `CustomAppBar` | Themed app bar |
 | `CustomButton` | Primary / secondary button variants |
 | `CustomTextField` | Styled text input |
 | `CustomDropdown` | Styled dropdown |
-| `Navbar` | Bottom navigation bar |
+
+App bars and bottom navigation bars are **not** provided: both are tightly coupled to a routing
+package, and shipping them would force that choice on every consumer. Build them in your app with
+Flutter's `AppBar` / `NavigationBar` and the design tokens here.
 
 ---
 
