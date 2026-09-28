@@ -4,7 +4,7 @@ Modular Flutter architecture on **Riverpod 3**: a backend-agnostic core plus opt
 packages. Design tokens, themes, responsive layout, storage, logging and a typed error hierarchy —
 versioned as a dependency instead of copy-pasted into every new `lib/core/`.
 
-**v6.0.0** · MIT · Flutter ≥ 3.16 · Dart ≥ 3.8
+**v6.0.1** · MIT · Flutter ≥ 3.16 · Dart ≥ 3.8
 
 **[▶ Live demo](https://himera19.github.io/core_architecture/)** — every feature of `core_architecture` running in the browser.
 
@@ -50,7 +50,7 @@ dependencies:
     git:
       url: https://github.com/Himera19/core_architecture.git
       path: packages/core_architecture_supabase
-      ref: v6.0.0
+      ref: v6.0.1
 ```
 
 | Package | `path:` | Import |
@@ -153,6 +153,7 @@ touching anything `@riverpod`, run `melos run generate` and commit the result wi
 2. Bump `version:` in every `packages/*/pubspec.yaml`.
 3. Update the `ref:` of the backend packages' `core_architecture` git dependency to the new tag.
 4. `git tag vX.Y.Z && git push && git push --tags`.
+5. `melos run check-refs` — confirms the ref from step 3 is on origin and carries this core.
 
 The tag in step 4 must match steps 2 and 3 — until it is pushed, consumers outside the repo cannot
 resolve the backend packages.
@@ -165,6 +166,7 @@ resolve the backend packages.
 | --- | --- |
 | `melos bootstrap` version conflict | One lockfile for all packages — align the constraint across `packages/*/pubspec.yaml`. |
 | Consumer cannot resolve `core_architecture` | The backend package's git `ref:` points at an unpushed tag. |
+| Consumer resolves an older `core_architecture` than expected | The ref is gone from origin but still in the local pub cache. Fix the ref (`melos run check-refs`), then `flutter pub cache clean`. |
 | `_$…Provider` is undefined | Code generation has not run: `melos run generate`. |
 | "SupabaseService must be initialized first" | `SupabaseCoreExtension.initialize()` was not awaited before `runApp`. |
 | `melos bootstrap` fails in *your* app | Expected — Melos is for this repo. Use `flutter pub get`. |

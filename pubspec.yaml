@@ -64,6 +64,10 @@ melos:
       packageFilters:
         dirExists: test
 
+    check-refs:
+      description: Verify the backend packages' core git ref is a pushed tag with this core version.
+      run: bash tool/check_refs.sh
+
     clean:
       description: Remove build artifacts from every package.
       exec:

@@ -1,5 +1,14 @@
 # Changelog
 
+## 6.0.1
+
+### Fixed
+
+- The `core_architecture` git dependency pointed at `v3.2.0`, a tag that no longer exists on
+  origin. A fresh checkout failed to resolve, and a machine whose pub cache still held the tag
+  silently got core 3.2.0 instead of 6.0.0. It is now pinned to `v6.0.0`, and this package's
+  version follows the core again. The package's own API is unchanged.
+
 ## 3.2.0
 
 Version bump to track `core_architecture` 3.2.0. This package's own API is unchanged. The core it
