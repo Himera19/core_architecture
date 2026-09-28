@@ -4,7 +4,7 @@ Modular Flutter architecture on **Riverpod 3**: a backend-agnostic core plus opt
 packages. Design tokens, themes, responsive layout, storage, logging and a typed error hierarchy —
 versioned as a dependency instead of copy-pasted into every new `lib/core/`.
 
-**v6.0.1** · MIT · Flutter ≥ 3.16 · Dart ≥ 3.8
+**v6.1.0** · MIT · Flutter ≥ 3.16 · Dart ≥ 3.8
 
 **[▶ Live demo](https://himera19.github.io/core_architecture/)** — every feature of `core_architecture` running in the browser.
 
@@ -50,7 +50,7 @@ dependencies:
     git:
       url: https://github.com/Himera19/core_architecture.git
       path: packages/core_architecture_supabase
-      ref: v6.0.1
+      ref: v6.1.0
 ```
 
 | Package | `path:` | Import |
@@ -116,7 +116,7 @@ Re-brand without forking: `AppTheme.light(brandColor: myPurple, fontFamily: 'Int
 | --- | --- |
 | [`core_architecture`](packages/core_architecture/README.md) | [tokens](packages/core_architecture/README.md#design-tokens) · [themes](packages/core_architecture/README.md#themes) · [responsive](packages/core_architecture/README.md#responsive) · [widgets](packages/core_architecture/README.md#widgets) · [utilities](packages/core_architecture/README.md#utilities) · [providers, storage, logging](packages/core_architecture/README.md#providers) · [errors](packages/core_architecture/README.md#errors) |
 | [`core_architecture_supabase`](packages/core_architecture_supabase/README.md) | setup · auth · CRUD |
-| [`core_architecture_dio`](packages/core_architecture_dio/README.md) | setup · interceptors · CRUD |
+| [`core_architecture_dio`](packages/core_architecture_dio/README.md) | setup · config · auth · CRUD |
 
 Version history is per package: `packages/*/CHANGELOG.md`.
 

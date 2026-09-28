@@ -90,3 +90,73 @@ final class DioCrudClientProvider
 }
 
 String _$dioCrudClientHash() => r'c7b1d59b701c07bea4e68f25b995dbdf4020bc32';
+
+/// Whether the user is signed in, for apps whose REST API issues the tokens.
+///
+/// The Dio counterpart of `SupabaseAuth`: it starts from the stored access
+/// token and follows [DioService.sessionChanges], so a session that ends
+/// because a refresh failed flips it to `false` without any call from the app.
+/// Endpoints and token fields come from [DioAuthConfig].
+
+@ProviderFor(DioAuth)
+const dioAuthProvider = DioAuthProvider._();
+
+/// Whether the user is signed in, for apps whose REST API issues the tokens.
+///
+/// The Dio counterpart of `SupabaseAuth`: it starts from the stored access
+/// token and follows [DioService.sessionChanges], so a session that ends
+/// because a refresh failed flips it to `false` without any call from the app.
+/// Endpoints and token fields come from [DioAuthConfig].
+final class DioAuthProvider extends $AsyncNotifierProvider<DioAuth, bool> {
+  /// Whether the user is signed in, for apps whose REST API issues the tokens.
+  ///
+  /// The Dio counterpart of `SupabaseAuth`: it starts from the stored access
+  /// token and follows [DioService.sessionChanges], so a session that ends
+  /// because a refresh failed flips it to `false` without any call from the app.
+  /// Endpoints and token fields come from [DioAuthConfig].
+  const DioAuthProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'dioAuthProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$dioAuthHash();
+
+  @$internal
+  @override
+  DioAuth create() => DioAuth();
+}
+
+String _$dioAuthHash() => r'cb13122d47def17e0c65f7a8ad2069b595888436';
+
+/// Whether the user is signed in, for apps whose REST API issues the tokens.
+///
+/// The Dio counterpart of `SupabaseAuth`: it starts from the stored access
+/// token and follows [DioService.sessionChanges], so a session that ends
+/// because a refresh failed flips it to `false` without any call from the app.
+/// Endpoints and token fields come from [DioAuthConfig].
+
+abstract class _$DioAuth extends $AsyncNotifier<bool> {
+  FutureOr<bool> build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final created = build();
+    final ref = this.ref as $Ref<AsyncValue<bool>, bool>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<AsyncValue<bool>, bool>,
+              AsyncValue<bool>,
+              Object?,
+              Object?
+            >;
+    element.handleValue(ref, created);
+  }
+}

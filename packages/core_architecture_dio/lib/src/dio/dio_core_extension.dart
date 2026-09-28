@@ -4,6 +4,7 @@ import 'package:core_architecture/core_architecture.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
+import 'dio_config.dart';
 import 'dio_service.dart';
 
 /// Standalone entry point for the Dio REST backend.
@@ -34,10 +35,11 @@ class DioCoreExtension {
 
   static bool get isInitialized => _isInitialized;
 
-  /// Initializes [DioService] with [baseUrl], falling back to `API_BASE_URL`
-  /// from [envFile] when [baseUrl] is omitted.
+  /// Initializes [DioService] with [config]. The base URL is [baseUrl], then
+  /// [DioConfig.baseUrl], then `API_BASE_URL` from [envFile].
   static Future<void> initialize({
     String? baseUrl,
+    DioConfig config = const DioConfig(),
     String envFile = '.env',
   }) async {
     if (_isInitialized) {
@@ -54,7 +56,7 @@ class DioCoreExtension {
       }
 
       _logger.i('[→] Initializing Dio...', tag: 'Dio');
-      await DioService.initialize(baseUrl: baseUrl);
+      await DioService.initialize(baseUrl: baseUrl, config: config);
 
       _isInitialized = true;
       _logger.i('[✓] Dio initialized', tag: 'Dio');

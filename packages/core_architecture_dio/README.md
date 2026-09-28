@@ -19,7 +19,7 @@ dependencies:
     git:
       url: https://github.com/Himera19/core_architecture.git
       path: packages/core_architecture_dio
-      ref: v3.2.0
+      ref: v6.1.0
 ```
 
 ```dart
@@ -59,10 +59,72 @@ void main() async {
 
 | Parameter | Default | Purpose |
 | --- | --- | --- |
-| `baseUrl` | `API_BASE_URL` from `.env` | Base URL for every request |
+| `baseUrl` | `config.baseUrl`, then `API_BASE_URL` from `.env` | Base URL for every request |
+| `config` | `const DioConfig()` | Timeouts, extra headers and the auth endpoints — see below |
 | `envFile` | `'.env'` | Only loaded if dotenv is not already initialized |
 
+### `DioConfig`
+
+| Field | Default |
+| --- | --- |
+| `connectTimeout` / `receiveTimeout` / `sendTimeout` | 30 s each |
+| `headers` | none — added on top of the JSON `Content-Type` and `Accept` |
+| `auth` | `const DioAuthConfig()` |
+
+`DioAuthConfig` describes your API's token endpoints. Response fields are dotted paths, so nested
+tokens need no custom code:
+
+| Field | Default | Used by |
+| --- | --- | --- |
+| `loginPath` | `/auth/login` | `signIn` |
+| `registerPath` | `/auth/register` (null: no sign-up) | `signUp` |
+| `refreshPath` | `/auth/refresh` (null: a 401 ends the session) | the 401 handler |
+| `logoutPath` | null (no server call) | `signOut` |
+| `passwordResetPath` | null | `requestPasswordReset` |
+| `identifierField` / `passwordField` | `email` / `password` | login, register, reset bodies |
+| `accessTokenField` / `refreshTokenField` | `access_token` / `refresh_token` | reading responses |
+| `refreshRequestField` | `refresh_token` | refresh body |
+| `tokenType` | `Bearer` | `Authorization` header |
+
+```dart
+await DioCoreExtension.initialize(
+  config: const DioConfig(
+    receiveTimeout: Duration(seconds: 60),
+    auth: DioAuthConfig(
+      loginPath: '/v1/sessions',
+      identifierField: 'username',
+      accessTokenField: 'data.token',     // {"data": {"token": "…"}}
+      refreshTokenField: 'data.refresh',
+    ),
+  ),
+);
+```
+
 `DioService.initialize()` is still there if you want to skip the wrapper.
+
+---
+
+## Auth
+
+`dioAuthProvider` is the Dio counterpart of `supabaseAuthProvider`: `AsyncValue<bool>`, `true`
+while an access token is stored.
+
+```dart
+final signedIn = ref.watch(dioAuthProvider).value ?? false;
+
+await ref.read(dioAuthProvider.notifier).signIn(identifier: email, password: password);
+await ref.read(dioAuthProvider.notifier).signUp(identifier: email, password: password, data: {'name': name});
+await ref.read(dioAuthProvider.notifier).signOut();
+```
+
+Rejected credentials throw `UnauthorizedFailure` carrying the API's `message`. Tokens obtained some
+other way (an OAuth redirect) go in with `DioService.instance.saveTokens(...)`.
+
+A 401 on a request that carried a token triggers one refresh against `refreshPath`, then one retry.
+Requests that fail while a refresh is running wait for that same refresh — refresh tokens that
+rotate are never spent twice. The refresh itself runs on a separate `Dio` with no auth
+interceptor, so it cannot recurse. When the refresh fails, or the retry gets another 401, the tokens
+are dropped and `dioAuthProvider` turns `false` on its own — watch it in your router's redirect.
 
 ---
 
@@ -106,7 +168,8 @@ a `Failure`:
 | --- | --- |
 | Connect / send / receive timeout | `TimeoutFailure` |
 | 401 | `UnauthorizedFailure` |
-| Other 4xx / 5xx | `ServerFailure` |
+| 5xx | `ServerFailure` |
+| Other 4xx | `NetworkFailure` |
 | Connection error, cancellation | `NetworkFailure` |
 | Anything else | `UnknownFailure` |
 
@@ -132,6 +195,7 @@ try {
 | --- | --- |
 | `dioServiceProvider` | `DioService` (keepAlive) |
 | `dioCrudClientProvider` | `DioCrudClient` (keepAlive) |
+| `dioAuthProvider` | `AsyncValue<bool>` — signed in or not (keepAlive) |
 
 Both assume initialization already happened — reading one before
 `DioCoreExtension.initialize()` completes throws.
@@ -141,10 +205,7 @@ Both assume initialization already happened — reading one before
 ```dart
 final dio = ref.read(dioServiceProvider).client;   // Dio
 
-final response = await dio.post('/auth/login', data: {
-  'email': email,
-  'password': password,
-});
+final response = await dio.get('/reports/export', queryParameters: {'format': 'csv'});
 
 dio.interceptors.add(MyInterceptor());   // your own interceptors go on the same instance
 ```

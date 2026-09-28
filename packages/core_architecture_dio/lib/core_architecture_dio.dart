@@ -6,6 +6,7 @@ library;
 export 'package:core_architecture/core_architecture.dart';
 
 // ==================== Dio Backend ====================
+export 'src/dio/dio_config.dart';
 export 'src/dio/dio_core_extension.dart';
 export 'src/dio/dio_service.dart';
 export 'src/dio/dio_crud_client.dart';

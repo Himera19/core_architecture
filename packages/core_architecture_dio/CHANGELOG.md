@@ -1,5 +1,30 @@
 # Changelog
 
+## 6.1.0
+
+### Added
+
+- `DioConfig` and `DioAuthConfig`, passed as `DioCoreExtension.initialize(config: …)`. Timeouts,
+  extra headers, the login / register / refresh / logout / password-reset paths, the request field
+  names, the dotted paths of the tokens in responses and the `Authorization` scheme were all
+  hard-coded; each is now a field with the old value as its default.
+- `dioAuthProvider` and `DioService.signIn` / `signUp` / `signOut` / `requestPasswordReset` /
+  `saveTokens` / `hasSession` / `sessionChanges` — the auth flow the Supabase package already had.
+
+### Fixed
+
+- A refresh that got a 401 could refresh again: it ran on the same `Dio` as the request that failed,
+  through the same 401 handler. Token endpoints now use a second `Dio` without it, and a retried
+  request that is still rejected ends the session instead of refreshing again.
+- Parallel requests that got a 401 each ran their own refresh, so an API that rotates refresh tokens
+  rejected all but the first. They now share one.
+- A 401 on a request that carried no token is no longer treated as an expired session.
+- A non-JSON error body (a plain-text 502 from a proxy) threw a `TypeError` out of the error
+  mapping instead of giving a `Failure`. The failure types for 4xx responses in the README now
+  match the code: `NetworkFailure`, with `ServerFailure` for 5xx only.
+- A missing `.env` surfaced as dotenv's `NotInitializedError` instead of the "`API_BASE_URL` not
+  found" `NetworkException`.
+
 ## 6.0.1
 
 ### Fixed
