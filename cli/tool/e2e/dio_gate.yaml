@@ -1,0 +1,14 @@
+backend: dio
+api_base_url: https://api.example.dev
+auth: true
+onboarding: true
+router: false
+l10n: false
+feature: task
+theme_mode: dark
+dio_auth:
+  login_path: /v1/sessions
+  register_path: null
+  password_reset_path: /v1/password/forgot
+  identifier_field: username
+  access_token_field: data.token

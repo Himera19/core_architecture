@@ -1,0 +1,21 @@
+name: core_architecture_cli
+description: Interactive scaffolder for Flutter apps built on core_architecture.
+version: 6.1.0
+publish_to: 'none'
+
+environment:
+  sdk: '>=3.10.0 <4.0.0'
+
+executables:
+  core_architecture: core_architecture
+
+dependencies:
+  args: ^2.7.0
+  mason_logger: ^0.3.6
+  path: ^1.9.1
+  yaml: ^3.1.4
+  yaml_edit: ^2.2.4
+
+dev_dependencies:
+  test: ^1.25.0
+  lints: ^6.0.0

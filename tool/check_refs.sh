@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Verifies that every backend package's `core_architecture` git ref is a tag
-# that exists on origin and carries the same core version as this checkout.
+# Verifies that every backend package's `core_architecture` git ref, and the
+# CLI's packageRef, is a tag that exists on origin and carries the same core
+# version as this checkout.
 #
 # Inside the workspace pub ignores these refs, so a stale or missing tag only
 # shows up for consumers — silently, if their pub cache still holds it.
@@ -12,8 +13,17 @@ core_version=$(sed -n 's/^version: //p' packages/core_architecture/pubspec.yaml)
 remote_tags=$(git ls-remote --tags origin)
 status=0
 
+# Each source and the ref it pins: the backend packages' core dependency, and
+# the tag the CLI scaffolds new apps on.
+refs=()
 for pubspec in packages/core_architecture_*/pubspec.yaml; do
-  ref=$(sed -n '/^  core_architecture:/,/ref:/s/^ *ref: //p' "$pubspec")
+  refs+=("$pubspec=$(sed -n '/^  core_architecture:/,/ref:/s/^ *ref: //p' "$pubspec")")
+done
+refs+=("cli/lib/src/version.dart=$(sed -n "s/^const String packageRef = '\(.*\)';/\1/p" cli/lib/src/version.dart)")
+
+for entry in "${refs[@]}"; do
+  pubspec=${entry%%=*}
+  ref=${entry#*=}
 
   if ! grep -q "refs/tags/$ref\$" <<<"$remote_tags"; then
     echo "✗ $pubspec: ref $ref is not a tag on origin"

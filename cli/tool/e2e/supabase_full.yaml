@@ -1,0 +1,12 @@
+org: dev.himera
+platforms: [android, ios, web]
+backend: supabase
+auth: true
+onboarding: true
+router: true
+l10n: true
+locales: [en, tr]
+brand_color: 5D1B9A
+font: Inter
+theme_mode: system
+feature: product

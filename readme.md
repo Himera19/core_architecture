@@ -25,6 +25,19 @@ No router, no navigation widgets, no in-app purchases — bring your own.
 
 ---
 
+## Start a new app
+
+```bash
+dart pub global activate --source git https://github.com/Himera19/core_architecture.git --git-path cli
+core_architecture create my_app
+```
+
+It asks about the backend, auth, onboarding, router, languages and theme, and gives back a
+feature-first app on these packages that already analyzes clean — see [the CLI](cli/README.md).
+The rest of this page is for adding the packages to an existing app by hand.
+
+---
+
 ## Packages
 
 | Package | Contents | Depends on |
@@ -32,6 +45,7 @@ No router, no navigation widgets, no in-app purchases — bring your own.
 | [`core_architecture`](packages/core_architecture) | Design tokens, themes, responsive layer, widgets, storage, logging, `Failure`/`AppException`, theme & onboarding providers, `CrudContract` | — |
 | [`core_architecture_supabase`](packages/core_architecture_supabase) | `SupabaseService`, `SupabaseCrudClient`, auth providers | core + `supabase_flutter` |
 | [`core_architecture_dio`](packages/core_architecture_dio) | `DioService`, `DioCrudClient`, providers | core + `dio` |
+| [`cli`](cli) | `core_architecture create` — scaffolds a new app on the packages above | — |
 | [`example`](example) | The demo app behind the live link above — every exported feature, running | core |
 
 Take the core alone, or add one backend package — or both, if the app talks to Supabase *and* a
@@ -151,9 +165,12 @@ touching anything `@riverpod`, run `melos run generate` and commit the result wi
 
 1. `melos run generate`, then `melos run analyze` and `melos run test`.
 2. Bump `version:` in every `packages/*/pubspec.yaml`.
-3. Update the `ref:` of the backend packages' `core_architecture` git dependency to the new tag.
+3. Update the `ref:` of the backend packages' `core_architecture` git dependency, and
+   `packageRef` in `cli/lib/src/version.dart`, to the new tag.
 4. `git tag vX.Y.Z && git push && git push --tags`.
-5. `melos run check-refs` — confirms the ref from step 3 is on origin and carries this core.
+5. `melos run check-refs` — confirms the refs from step 3 are on origin and carry this core.
+6. `bash cli/tool/e2e.sh` — scaffolds four apps on the new tag; each must analyze clean and pass
+   its tests.
 
 The tag in step 4 must match steps 2 and 3 — until it is pushed, consumers outside the repo cannot
 resolve the backend packages.

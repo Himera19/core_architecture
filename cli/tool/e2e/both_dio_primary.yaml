@@ -1,0 +1,10 @@
+platforms: [android, ios, macos]
+backend: both
+primary: dio
+auth: true
+onboarding: false
+router: true
+l10n: true
+locales: [tr, de]
+feature: note
+brand_color: '#0E7C66'
