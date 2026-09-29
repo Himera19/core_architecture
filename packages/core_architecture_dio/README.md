@@ -1,21 +1,31 @@
 # core_architecture_dio
 
-Dio REST backend for [`core_architecture`](../core_architecture): `DioService` (a configured Dio
-instance with logging, auth-token and error interceptors), `DioCrudClient` (a `CrudContract`
-implementation), Riverpod providers and a standalone initializer.
+A REST API client for apps on [`core_architecture`](../core_architecture). It covers token auth
+that refreshes itself, CRUD through `CrudContract`, and error mapping to the core's `Failure`
+types, all configured in one place so it fits the API you already have.
 
-Depends on and **re-exports** `core_architecture` plus `dio` (`Dio`, `Response`, `DioException`,
-`Interceptor`, …), so one import covers everything.
+| | |
+| --- | --- |
+| 🔐 **Auth** | Sign in, sign up, sign out, password reset. `dioAuthProvider` tells you whether someone is signed in and turns `false` by itself when a session can't be recovered |
+| 🔄 **Token refresh** | A 401 triggers one refresh and one retry. Parallel requests share that refresh, so rotating refresh tokens are never spent twice |
+| ⚙️ **Configurable** | Endpoints, field names, token paths such as `data.token`, the header scheme, timeouts and extra headers |
+| 🗄️ **CRUD** | `DioCrudClient` implements `CrudContract` over REST conventions, so repositories also run on Supabase |
+| 🧯 **Errors** | Timeouts, 401, 4xx, 5xx and offline all become `Failure`s, with your API's `message` |
+| 🪵 **Logging** | Every request and response is logged in debug builds. Release builds keep only warnings and errors |
+
+It depends on and **re-exports** both `core_architecture` and `dio` (`Dio`, `Response`,
+`DioException`, `Interceptor`, …), so one import is enough.
+
+> Starting a new app? `core_architecture create` with the REST backend asks for your endpoints,
+> writes the `DioConfig` and generates the auth screens. See [the CLI](../../cli).
 
 ---
 
 ## Install
 
-Do not list `core_architecture` separately — this package brings it in.
-
 ```yaml
 dependencies:
-  core_architecture_dio:
+  core_architecture_dio:             # brings in core_architecture, so don't list it too
     git:
       url: https://github.com/Himera19/core_architecture.git
       path: packages/core_architecture_dio
@@ -26,166 +36,166 @@ dependencies:
 import 'package:core_architecture_dio/core_architecture_dio.dart';
 ```
 
-## Environment
+## Setup
 
 ```yaml
-# your_app/pubspec.yaml
+# pubspec.yaml
 flutter:
   assets:
     - .env
 ```
 
 ```bash
+# .env
 API_BASE_URL=https://api.example.com
 ```
-
-The `baseUrl` passed to the initializer wins; otherwise `API_BASE_URL` is read from `.env`. With
-neither, initialization throws `NetworkException`.
-
-## Setup
-
-`DioCoreExtension.initialize()` is standalone — it ensures the Flutter binding and loads `.env`
-itself, so it can be the only call in `main()`. Both steps are idempotent, so it also composes with
-`CoreInitializer`:
 
 ```dart
 void main() async {
   await CoreInitializer.initialize(const CoreConfig(appName: 'MyApp'));   // optional
-  await DioCoreExtension.initialize(baseUrl: 'https://api.example.com');
+  await DioCoreExtension.initialize();                                     // or (config: dioConfig)
 
   runApp(const ProviderScope(child: MyApp()));
 }
 ```
 
-| Parameter | Default | Purpose |
-| --- | --- | --- |
-| `baseUrl` | `config.baseUrl`, then `API_BASE_URL` from `.env` | Base URL for every request |
-| `config` | `const DioConfig()` | Timeouts, extra headers and the auth endpoints — see below |
-| `envFile` | `'.env'` | Only loaded if dotenv is not already initialized |
+The base URL is `baseUrl:` if you pass it, then `config.baseUrl`, then `API_BASE_URL` from `.env`.
+With none of them set, initialization throws a `NetworkException` that says so. The initializer
+also works on its own: it sets up the Flutter binding and loads `.env` itself.
 
-### `DioConfig`
+---
 
-| Field | Default |
-| --- | --- |
-| `connectTimeout` / `receiveTimeout` / `sendTimeout` | 30 s each |
-| `headers` | none — added on top of the JSON `Content-Type` and `Accept` |
-| `auth` | `const DioAuthConfig()` |
+## Configuration
 
-`DioAuthConfig` describes your API's token endpoints. Response fields are dotted paths, so nested
-tokens need no custom code:
+Out of the box it expects the most common shape:
 
-| Field | Default | Used by |
-| --- | --- | --- |
-| `loginPath` | `/auth/login` | `signIn` |
-| `registerPath` | `/auth/register` (null: no sign-up) | `signUp` |
-| `refreshPath` | `/auth/refresh` (null: a 401 ends the session) | the 401 handler |
-| `logoutPath` | null (no server call) | `signOut` |
-| `passwordResetPath` | null | `requestPasswordReset` |
-| `identifierField` / `passwordField` | `email` / `password` | login, register, reset bodies |
-| `accessTokenField` / `refreshTokenField` | `access_token` / `refresh_token` | reading responses |
-| `refreshRequestField` | `refresh_token` | refresh body |
-| `tokenType` | `Bearer` | `Authorization` header |
-
-```dart
-await DioCoreExtension.initialize(
-  config: const DioConfig(
-    receiveTimeout: Duration(seconds: 60),
-    auth: DioAuthConfig(
-      loginPath: '/v1/sessions',
-      identifierField: 'username',
-      accessTokenField: 'data.token',     // {"data": {"token": "…"}}
-      refreshTokenField: 'data.refresh',
-    ),
-  ),
-);
+```text
+POST /auth/login     {"email", "password"}   →  {"access_token", "refresh_token"}
+POST /auth/register  {"email", "password"}   →  same, or no tokens if email must be confirmed
+POST /auth/refresh   {"refresh_token"}       →  {"access_token", "refresh_token"?}
+Authorization: Bearer <access_token>
 ```
 
-`DioService.initialize()` is still there if you want to skip the wrapper.
+When your API differs, override only what changes:
+
+```dart
+const dioConfig = DioConfig(
+  receiveTimeout: Duration(seconds: 60),
+  headers: {'X-Client': 'mobile'},
+  auth: DioAuthConfig(
+    loginPath: '/v1/sessions',
+    registerPath: null,                  // no self sign-up
+    passwordResetPath: '/v1/password/forgot',
+    identifierField: 'username',         // log in with a username
+    accessTokenField: 'data.token',      // {"data": {"token": "…"}}
+    refreshTokenField: 'data.refresh',
+    tokenType: 'Token',                  // Authorization: Token <…>
+  ),
+);
+
+await DioCoreExtension.initialize(config: dioConfig);
+```
+
+| `DioConfig` | Default |
+| --- | --- |
+| `baseUrl` | `API_BASE_URL` from `.env` |
+| `connectTimeout` / `receiveTimeout` / `sendTimeout` | 30 s each |
+| `headers` | none (added to the JSON `Content-Type` and `Accept`) |
+| `auth` | `const DioAuthConfig()` |
+
+| `DioAuthConfig` | Default | Used by |
+| --- | --- | --- |
+| `loginPath` | `/auth/login` | `signIn` |
+| `registerPath` | `/auth/register`; `null` means no sign-up | `signUp` |
+| `refreshPath` | `/auth/refresh`; `null` means a 401 ends the session | the 401 handler |
+| `logoutPath` | `null`, so no server call | `signOut` |
+| `passwordResetPath` | `null` | `requestPasswordReset` |
+| `identifierField` / `passwordField` | `email` / `password` | login, register and reset bodies |
+| `accessTokenField` / `refreshTokenField` | `access_token` / `refresh_token`, as dotted paths | reading responses |
+| `refreshRequestField` | `refresh_token` | the refresh body |
+| `tokenType` | `Bearer` | the `Authorization` header |
 
 ---
 
 ## Auth
 
-`dioAuthProvider` is the Dio counterpart of `supabaseAuthProvider`: `AsyncValue<bool>`, `true`
-while an access token is stored.
-
 ```dart
-final signedIn = ref.watch(dioAuthProvider).value ?? false;
+final signedIn = ref.watch(dioAuthProvider).value ?? false;   // AsyncValue<bool>
+final auth = ref.read(dioAuthProvider.notifier);
 
-await ref.read(dioAuthProvider.notifier).signIn(identifier: email, password: password);
-await ref.read(dioAuthProvider.notifier).signUp(identifier: email, password: password, data: {'name': name});
-await ref.read(dioAuthProvider.notifier).signOut();
+await auth.signIn(identifier: email, password: password);     // stores both tokens
+await auth.signUp(identifier: email, password: password, data: {'name': name});
+await auth.requestPasswordReset(email);
+await auth.signOut();                                         // tokens dropped even if the server call fails
 ```
 
-Rejected credentials throw `UnauthorizedFailure` carrying the API's `message`. Tokens obtained some
-other way (an OAuth redirect) go in with `DioService.instance.saveTokens(...)`.
+`signIn` and `signUp` return the whole response body, so you can read a user object out of it.
+Tokens obtained some other way, such as an OAuth redirect, go in with
+`DioService.instance.saveTokens(accessToken: …, refreshToken: …)`.
 
-A 401 on a request that carried a token triggers one refresh against `refreshPath`, then one retry.
-Requests that fail while a refresh is running wait for that same refresh — refresh tokens that
-rotate are never spent twice. The refresh itself runs on a separate `Dio` with no auth
-interceptor, so it cannot recurse. When the refresh fails, or the retry gets another 401, the tokens
-are dropped and `dioAuthProvider` turns `false` on its own — watch it in your router's redirect.
+**How a session behaves:**
+
+1. Every request carries the stored access token.
+2. A 401 on a request that sent a token triggers one refresh against `refreshPath`, then one retry
+   with the new token.
+3. Requests that fail during a refresh wait for that same refresh instead of starting their own.
+4. The refresh runs on a separate `Dio` that has no 401 handler, so it can't loop.
+5. If the refresh fails, or the retry gets another 401, the tokens are dropped and `dioAuthProvider`
+   turns `false`. A router redirect watching it sends the user to sign-in, and your code doesn't
+   have to do anything.
+
+Rejected credentials throw `UnauthorizedFailure` carrying your API's `message`.
 
 ---
 
 ## CRUD
 
-`DioCrudClient` implements `CrudContract`, so the same repository works against Supabase by
-swapping the injected client.
-
 ```dart
-@riverpod
-class TodosNotifier extends _$TodosNotifier {
-  @override
-  Future<List<Todo>> build() async {
-    final client = ref.watch(dioCrudClientProvider);
+final client = ref.watch(dioCrudClientProvider);   // CrudContract
 
-    return client.query<Todo>(
-      table: 'todos',          // maps to the /todos endpoint
-      fromJson: Todo.fromJson,
-      filter: {'user_id': userId},
-      orderBy: 'created_at',
-      ascending: false,
-      limit: 20,
-    );
-  }
-}
+final todos = await client.query<Todo>(
+  table: 'todos',
+  fromJson: Todo.fromJson,
+  filter: {'done': false},
+  orderBy: 'created_at',
+  ascending: false,
+  limit: 20,
+);
 ```
 
-Operations: `query`, `getById`, `insert`, `update`, `delete`, `upsert`, `batchInsert`,
-`batchUpdate`, `batchDelete`, `batchUpsert`, `exists`, `count`, `rpc`.
+`table` is the resource path, and each operation maps to a REST call:
 
-`table` is the REST resource path, so `table: 'todos'` maps to `GET /todos`, `POST /todos`,
-`PUT /todos/{id}`, `DELETE /todos/{id}`, plus `/todos/batch`, `/todos/upsert` and
-`/rpc/{function}`.
+| Operation | Request |
+| --- | --- |
+| `query` | `GET /todos?done=false&order_by=created_at&ascending=false&limit=20&offset=…` |
+| `getById` / `exists` | `GET /todos/{id}` |
+| `insert` | `POST /todos` |
+| `update` | `PUT /todos/{id}` |
+| `delete` | `DELETE /todos/{id}` |
+| `batchInsert` / `batchUpdate` / `batchDelete` | `POST` / `PUT` / `DELETE /todos/batch` |
+| `upsert` / `batchUpsert` | `POST /todos/upsert` / `POST /todos/upsert/batch` |
+| `count` | `GET /todos/count?…filter` |
+| `rpc` | `POST /rpc/{function}` |
 
-### Which type you catch
+A list response can be a bare array or `{"data": [...]}`. Type repositories against `CrudContract`
+and they also run on [`core_architecture_supabase`](../core_architecture_supabase).
 
-`DioService` converts `DioException`s into `core_architecture` failures, so `DioCrudClient` throws
-a `Failure`:
+### What gets thrown
+
+`DioCrudClient` and the auth methods throw `Failure`s:
 
 | Cause | Failure |
 | --- | --- |
-| Connect / send / receive timeout | `TimeoutFailure` |
+| Connect, send or receive timeout | `TimeoutFailure` |
 | 401 | `UnauthorizedFailure` |
 | 5xx | `ServerFailure` |
 | Other 4xx | `NetworkFailure` |
-| Connection error, cancellation | `NetworkFailure` |
+| Offline, cancelled | `NetworkFailure` |
 | Anything else | `UnknownFailure` |
 
-The raw client gives you `DioException` directly. This package shadows no `dio` or `dart:async`
-type name, so both clauses below mean what you expect — core's own timeout type is
-`RequestTimeoutException`:
-
-```dart
-try {
-  await DioService.instance.client.get<void>('/health');
-} on DioException catch (e) {
-  debugPrint('${e.response?.statusCode}');
-} on TimeoutException catch (e) {     // dart:async's type
-  debugPrint(e.message);
-}
-```
+A JSON error body's `message` becomes the failure's message. A plain-text or HTML body, such as a
+proxy's 502 page, gets a generic message instead of crashing. The raw client throws `DioException`,
+with the `Failure` in its `.error`.
 
 ---
 
@@ -193,19 +203,17 @@ try {
 
 | Provider | Returns |
 | --- | --- |
-| `dioServiceProvider` | `DioService` (keepAlive) |
+| `dioAuthProvider` | `AsyncValue<bool>`, signed in or not, plus the auth actions on `.notifier` (keepAlive) |
 | `dioCrudClientProvider` | `DioCrudClient` (keepAlive) |
-| `dioAuthProvider` | `AsyncValue<bool>` — signed in or not (keepAlive) |
+| `dioServiceProvider` | `DioService`: HTTP verbs, session and the raw client (keepAlive) |
 
-Both assume initialization already happened — reading one before
-`DioCoreExtension.initialize()` completes throws.
+Each one expects `DioCoreExtension.initialize()` to have finished before it's first read.
 
-## Direct client access
+For calls outside CRUD, the service and the raw client come with the same interceptors:
 
 ```dart
-final dio = ref.read(dioServiceProvider).client;   // Dio
+final api = ref.read(dioServiceProvider);
+final report = await api.get('/reports/export', queryParameters: {'format': 'csv'});
 
-final response = await dio.get('/reports/export', queryParameters: {'format': 'csv'});
-
-dio.interceptors.add(MyInterceptor());   // your own interceptors go on the same instance
+api.client.interceptors.add(MyInterceptor());   // the underlying Dio
 ```
