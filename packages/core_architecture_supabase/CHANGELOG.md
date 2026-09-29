@@ -1,5 +1,10 @@
 # Changelog
 
+## 6.3.0
+
+Version bump to track `core_architecture` 6.3.0. The HTTP logs it writes through the core's
+`LoggerService` now mask passwords, tokens, keys and cookies. This package's own API is unchanged.
+
 ## 6.2.0
 
 Version bump to track `core_architecture` 6.2.0, which adds `initialThemeModeProvider`. This

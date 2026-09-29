@@ -27,7 +27,7 @@ dependencies:
     git:
       url: https://github.com/Himera19/core_architecture.git
       path: packages/core_architecture_supabase
-      ref: v6.2.0
+      ref: v6.3.0
 ```
 
 ```dart

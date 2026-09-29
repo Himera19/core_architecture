@@ -11,7 +11,7 @@ types, all configured in one place so it fits the API you already have.
 | ⚙️ **Configurable** | Endpoints, field names, token paths such as `data.token`, the header scheme, timeouts and extra headers |
 | 🗄️ **CRUD** | `DioCrudClient` implements `CrudContract` over REST conventions, so repositories also run on Supabase |
 | 🧯 **Errors** | Timeouts, 401, 4xx, 5xx and offline all become `Failure`s, with your API's `message` |
-| 🪵 **Logging** | Every request and response is logged in debug builds. Release builds keep only warnings and errors |
+| 🪵 **Logging** | Every request and response is logged in debug builds, with passwords, tokens, keys and cookies masked. Release builds keep only warnings and errors |
 
 It depends on and **re-exports** both `core_architecture` and `dio` (`Dio`, `Response`,
 `DioException`, `Interceptor`, …), so one import is enough.
@@ -29,7 +29,7 @@ dependencies:
     git:
       url: https://github.com/Himera19/core_architecture.git
       path: packages/core_architecture_dio
-      ref: v6.2.0
+      ref: v6.3.0
 ```
 
 ```dart

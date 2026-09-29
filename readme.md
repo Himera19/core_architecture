@@ -5,7 +5,7 @@ logging, error types, auth and data access, all on Riverpod 3. Answer a few ques
 an app that already builds, analyzes clean and passes its tests. Or add the packages to an app you
 already have.
 
-**v6.2.0** · MIT · Flutter ≥ 3.16 · Dart ≥ 3.8 ·
+**v6.3.0** · MIT · Flutter ≥ 3.16 · Dart ≥ 3.8 ·
 **[▶ Live demo](https://himera19.github.io/core_architecture/)**
 
 ```bash
@@ -26,7 +26,7 @@ core_architecture create my_app
 | 🗄️ **Data** | One `CrudContract` covering query, get, insert, update, delete, upsert, batch, count and RPC, implemented for both Supabase and REST. Features never name a backend. |
 | 💾 **Storage** | Secure storage for secrets and shared preferences for settings. Theme mode and onboarding state are persisted for you. |
 | 🧯 **Errors** | One `Failure` type for every backend: network, server, timeout, auth, unauthorized, database and more. |
-| 🪵 **Logging** | Tagged levels, HTTP request and response logs in debug builds, and a masking helper for secrets. |
+| 🪵 **Logging** | Tagged levels, and HTTP request and response logs that mask passwords, tokens, keys and cookies. |
 | 🛠️ **Utilities** | Validators, locale-aware date helpers, spacing and radius helpers, SnackBar shortcuts, and a URL launcher. |
 | ⚡ **Scaffolder** | `core_architecture create` builds a new app from your answers: backend, auth screens, onboarding, router, languages, an example CRUD feature and the theme. |
 
@@ -133,7 +133,7 @@ dependencies:
     git:
       url: https://github.com/Himera19/core_architecture.git
       path: packages/core_architecture_supabase
-      ref: v6.2.0
+      ref: v6.3.0
 ```
 
 **2. `.env`.** Declare it as an asset, and keep it out of git.

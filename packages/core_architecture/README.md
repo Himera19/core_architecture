@@ -30,7 +30,7 @@ dependencies:
     git:
       url: https://github.com/Himera19/core_architecture.git
       path: packages/core_architecture
-      ref: v6.2.0
+      ref: v6.3.0
 ```
 
 ```dart
@@ -466,7 +466,21 @@ log.fatal('Unrecoverable state', tag: 'Core');
 log.maskSensitive('sk_live_abc123xyz', visibleStart: 7, visibleEnd: 3);   // sk_live*******xyz
 ```
 
-`logRequest`, `logResponse` and `logError` are the HTTP versions the backend packages use.
+`logRequest`, `logResponse` and `logError` are the HTTP versions the backend packages use. They
+**mask secrets before printing**, in headers, bodies at any depth, JSON string bodies and query
+strings. Any key containing `password`, `token`, `secret`, `authorization`, `cookie`, `apikey`,
+`credential` or `signature` is masked, and so is an exact `otp`, `pin`, `cvv`, `cvc` or `ssn`:
+
+```text
+POST https://api.example.com/auth/login
+Headers: {Authorization: Bearer ************a9f2}
+Body: {email: ada@example.com, password: ****}
+```
+
+A long secret keeps its last four characters, so you can still tell two tokens apart. Add your own
+keys with `LoggerService.addSensitiveKeys(['iban'])`, and call `log.redact(value)` or
+`log.redactUrl(url)` to apply the same masking in your own logs. Release builds print only
+warnings and errors.
 
 ---
 

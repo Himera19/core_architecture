@@ -1,5 +1,21 @@
 # Changelog
 
+## 6.3.0
+
+### Fixed
+
+- HTTP logs printed secrets in debug builds. `logRequest` and `logResponse` wrote headers and bodies
+  as they were, so a sign-in logged the password, and every authenticated request and token
+  response logged the tokens. They now mask any key containing `password`, `token`, `secret`,
+  `authorization`, `cookie`, `apikey`, `credential` or `signature`, or equal to `otp`, `pin`,
+  `cvv`, `cvc` or `ssn`, at any depth, inside JSON string bodies, and in URL query strings. A
+  response is masked before it's truncated.
+
+### Added
+
+- `LoggerService.redact`, `redactUrl`, `isSensitiveKey` and `addSensitiveKeys`, to apply the same
+  masking elsewhere and to extend it with app-specific keys.
+
 ## 6.2.0
 
 ### Added
