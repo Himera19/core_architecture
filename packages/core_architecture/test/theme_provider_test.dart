@@ -40,9 +40,14 @@ class _FakeStorage implements StorageService {
       _values.containsKey(key);
 }
 
-ProviderContainer _containerWith(_FakeStorage storage) {
+ProviderContainer _containerWith(
+  _FakeStorage storage, {
+  ThemeMode? initialMode,
+}) {
   final container = ProviderContainer(
     overrides: [
+      if (initialMode != null)
+        initialThemeModeProvider.overrideWithValue(initialMode),
       preferencesStorageProvider.overrideWithValue(storage),
       // Faked as well: the notifier reads the keystore once, to carry across
       // a value written before 6.0.0, and a real one would reach for a
@@ -64,6 +69,28 @@ void main() {
       expect(container.read(themeProvider), ThemeMode.light);
       await Future<void>.delayed(Duration.zero);
       expect(container.read(themeProvider), ThemeMode.dark);
+    });
+
+    test('starts from the overridden initial mode until one is stored', () async {
+      final container = _containerWith(
+        _FakeStorage(),
+        initialMode: ThemeMode.system,
+      );
+
+      expect(container.read(themeProvider), ThemeMode.system);
+      await Future<void>.delayed(Duration.zero);
+      expect(container.read(themeProvider), ThemeMode.system);
+    });
+
+    test('a stored mode wins over the initial mode', () async {
+      final container = _containerWith(
+        _FakeStorage(seed: {StorageConstants.themeMode: 'light'}),
+        initialMode: ThemeMode.dark,
+      );
+
+      expect(container.read(themeProvider), ThemeMode.dark);
+      await Future<void>.delayed(Duration.zero);
+      expect(container.read(themeProvider), ThemeMode.light);
     });
 
     test('persists the mode the user picks', () async {

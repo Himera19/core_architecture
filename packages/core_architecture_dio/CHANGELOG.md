@@ -1,5 +1,10 @@
 # Changelog
 
+## 6.2.0
+
+Version bump to track `core_architecture` 6.2.0, which adds `initialThemeModeProvider`. This
+package's own API is unchanged.
+
 ## 6.1.0
 
 ### Added

@@ -18,7 +18,7 @@ dependencies:
     git:
       url: https://github.com/Himera19/core_architecture.git
       path: packages/core_architecture
-      ref: v6.1.0
+      ref: v6.2.0
 ```
 
 ```dart
@@ -515,6 +515,7 @@ Android).
 | Provider | Type | Notes |
 | --- | --- | --- |
 | `themeProvider` | `ThemeMode` | Persisted; `.notifier` has `toggleTheme()` / `setThemeMode()` |
+| `initialThemeModeProvider` | `ThemeMode` | What `themeProvider` shows before a choice is stored — `light` unless overridden in `ProviderScope` |
 | `onboardingStateProvider` | `AsyncValue<bool>` | `.notifier` has `markAsSeen()` / `reset()` |
 | `storageServiceProvider` | `StorageService` | Backed by `SecureStorageService` |
 | `loggerServiceProvider` | `LoggerService` | |

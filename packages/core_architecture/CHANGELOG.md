@@ -1,5 +1,13 @@
 # Changelog
 
+## 6.2.0
+
+### Added
+
+- `initialThemeModeProvider`: the mode `themeProvider` shows until the user has picked one.
+  Override it in `ProviderScope` to start an app in `ThemeMode.system` or `ThemeMode.dark`; it
+  stays `ThemeMode.light` otherwise, as before. A stored choice still wins.
+
 ## 3.2.0
 
 ### Fixed

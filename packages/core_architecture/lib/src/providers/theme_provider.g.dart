@@ -8,12 +8,85 @@ part of 'theme_provider.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// The mode [themeProvider] shows until the user has picked one.
+///
+/// [ThemeMode.light] unless overridden — the default before 6.1.0:
+///
+/// ```dart
+/// ProviderScope(
+///   overrides: [initialThemeModeProvider.overrideWithValue(ThemeMode.system)],
+///   child: const MyApp(),
+/// )
+/// ```
+
+@ProviderFor(initialThemeMode)
+const initialThemeModeProvider = InitialThemeModeProvider._();
+
+/// The mode [themeProvider] shows until the user has picked one.
+///
+/// [ThemeMode.light] unless overridden — the default before 6.1.0:
+///
+/// ```dart
+/// ProviderScope(
+///   overrides: [initialThemeModeProvider.overrideWithValue(ThemeMode.system)],
+///   child: const MyApp(),
+/// )
+/// ```
+
+final class InitialThemeModeProvider
+    extends $FunctionalProvider<ThemeMode, ThemeMode, ThemeMode>
+    with $Provider<ThemeMode> {
+  /// The mode [themeProvider] shows until the user has picked one.
+  ///
+  /// [ThemeMode.light] unless overridden — the default before 6.1.0:
+  ///
+  /// ```dart
+  /// ProviderScope(
+  ///   overrides: [initialThemeModeProvider.overrideWithValue(ThemeMode.system)],
+  ///   child: const MyApp(),
+  /// )
+  /// ```
+  const InitialThemeModeProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'initialThemeModeProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$initialThemeModeHash();
+
+  @$internal
+  @override
+  $ProviderElement<ThemeMode> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  ThemeMode create(Ref ref) {
+    return initialThemeMode(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(ThemeMode value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<ThemeMode>(value),
+    );
+  }
+}
+
+String _$initialThemeModeHash() => r'2e36ff2644e1f1de91a03c0f50e5eed8a36734c5';
+
 /// Manages the app theme mode, persisted as a preference.
 ///
 /// Uses [StorageService] and [LoggerService] via Riverpod DI,
 /// making it fully testable and consistent with the architecture.
 ///
-/// [build] returns [ThemeMode.light] synchronously and loads the persisted
+/// [build] returns [initialThemeModeProvider] synchronously and loads the persisted
 /// mode in the background, so the first frame never waits on storage.
 /// A mode the user picks while that read is still in flight wins — see
 /// [_loadTheme].
@@ -26,7 +99,7 @@ const themeProvider = ThemeNotifierProvider._();
 /// Uses [StorageService] and [LoggerService] via Riverpod DI,
 /// making it fully testable and consistent with the architecture.
 ///
-/// [build] returns [ThemeMode.light] synchronously and loads the persisted
+/// [build] returns [initialThemeModeProvider] synchronously and loads the persisted
 /// mode in the background, so the first frame never waits on storage.
 /// A mode the user picks while that read is still in flight wins — see
 /// [_loadTheme].
@@ -37,7 +110,7 @@ final class ThemeNotifierProvider
   /// Uses [StorageService] and [LoggerService] via Riverpod DI,
   /// making it fully testable and consistent with the architecture.
   ///
-  /// [build] returns [ThemeMode.light] synchronously and loads the persisted
+  /// [build] returns [initialThemeModeProvider] synchronously and loads the persisted
   /// mode in the background, so the first frame never waits on storage.
   /// A mode the user picks while that read is still in flight wins — see
   /// [_loadTheme].
@@ -68,14 +141,14 @@ final class ThemeNotifierProvider
   }
 }
 
-String _$themeNotifierHash() => r'3ab9e3b238b272bbf83dff22a2ebd45b5d8987be';
+String _$themeNotifierHash() => r'ea2936ae33d18b5458cb452b07eeda19293c4bbd';
 
 /// Manages the app theme mode, persisted as a preference.
 ///
 /// Uses [StorageService] and [LoggerService] via Riverpod DI,
 /// making it fully testable and consistent with the architecture.
 ///
-/// [build] returns [ThemeMode.light] synchronously and loads the persisted
+/// [build] returns [initialThemeModeProvider] synchronously and loads the persisted
 /// mode in the background, so the first frame never waits on storage.
 /// A mode the user picks while that read is still in flight wins — see
 /// [_loadTheme].

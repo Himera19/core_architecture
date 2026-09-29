@@ -9,12 +9,25 @@ import '../services/storage_service.dart';
 
 part 'theme_provider.g.dart';
 
+/// The mode [themeProvider] shows until the user has picked one.
+///
+/// [ThemeMode.light] unless overridden — the default before 6.1.0:
+///
+/// ```dart
+/// ProviderScope(
+///   overrides: [initialThemeModeProvider.overrideWithValue(ThemeMode.system)],
+///   child: const MyApp(),
+/// )
+/// ```
+@Riverpod(keepAlive: true)
+ThemeMode initialThemeMode(Ref ref) => ThemeMode.light;
+
 /// Manages the app theme mode, persisted as a preference.
 ///
 /// Uses [StorageService] and [LoggerService] via Riverpod DI,
 /// making it fully testable and consistent with the architecture.
 ///
-/// [build] returns [ThemeMode.light] synchronously and loads the persisted
+/// [build] returns [initialThemeModeProvider] synchronously and loads the persisted
 /// mode in the background, so the first frame never waits on storage.
 /// A mode the user picks while that read is still in flight wins — see
 /// [_loadTheme].
@@ -48,7 +61,7 @@ class ThemeNotifier extends _$ThemeNotifier {
     _userChose = false;
 
     _loadTheme();
-    return ThemeMode.light;
+    return ref.watch(initialThemeModeProvider);
   }
 
   /// Loads the saved theme mode.
