@@ -24,6 +24,127 @@
   Override it in `ProviderScope` to start an app in `ThemeMode.system` or `ThemeMode.dark`; it
   stays `ThemeMode.light` otherwise, as before. A stored choice still wins.
 
+> There is no core 6.0.1 or 6.1.0. Those tags changed only the backend packages, so the core stayed
+> at 6.0.0 until 6.2.0.
+
+## 6.0.0
+
+### Breaking
+
+- `storageServiceProvider` is replaced by two providers. `secureStorageProvider` (the keychain /
+  keystore) holds secrets such as tokens, and the new `preferencesStorageProvider`
+  (`shared_preferences`) holds settings. An app that overrode `storageServiceProvider` in tests now
+  overrides both.
+- `DateHelper.dayNames` and `monthNames` are now functions taking an optional `locale`, not
+  `const` Turkish lists.
+- `CustomButton` corners change from `AppRadius.md` (8) to `AppRadius.lg` (16), matching what
+  `AppTheme` gives every Material button. A `CustomButton` and a `FilledButton` on one screen
+  used to have different corners.
+
+### Changed
+
+- The theme mode and the onboarding flag moved from the keystore to shared preferences. Reading
+  them through the keystore cost a round trip on every launch, could fail on iOS before the
+  device's first unlock, and gained nothing on the web. Values written by an older version are
+  carried across on first read and then cleared from the keystore (`readMigratedSetting`), so
+  nobody loses their theme or sees onboarding a second time. A value already in preferences wins,
+  so migration never overwrites a newer choice.
+- `DateHelper` takes day and month names from `intl` for the locale you pass, defaulting to
+  `Intl.defaultLocale`, and `formatDate` / `formatTime` / `formatDateTime` take an optional
+  `pattern`. The package no longer decides the app's language.
+- `AppSpacings`' `w*` / `h*` / `r*` ramps share one set of constants instead of three lists of
+  literals that could drift apart. `AppBreakpoints.margin` and `gutter` now come from
+  `AppSpacings`.
+- The dropdown sheets read the colour scheme from their own context, and sit inside a `SafeArea`
+  so the confirm button clears the home indicator.
+
+### Added
+
+- `CustomButton(fullWidth:)`, `true` by default. The width used to be forced to infinity, so two
+  buttons couldn't share a `Row` without an `Expanded` around each.
+- `PreferencesStorageService`, `preferencesStorageProvider` and `readMigratedSetting`.
+
+### Fixed
+
+- `SecureStorageService` no longer caches a miss. A cached `null` never expired, so a key written
+  later, by the native side or a fresh login, stayed invisible for the life of the app.
+- `CoreInitializer` no longer logs "Storage service initialized". It was never true, since both
+  stores resolve lazily on first use.
+
+## 5.1.1
+
+### Fixed
+
+- Choosing `ThemeMode.system` did not survive a restart. `ThemeNotifier` saved `mode.name` but
+  only recognised `"light"` and `"dark"` when reading it back, so `"system"` was silently dropped
+  and the app came back up in light. The stored value is now matched against every `ThemeMode`,
+  and a value it doesn't recognise still leaves the default alone.
+
+## 5.1.0
+
+### Added
+
+- An app-wide loading indicator. `AppTheme.light` / `dark(loadingIndicatorBuilder:)` installs a
+  `CoreComponentsTheme` extension that every `CustomButton` reads, so the spinner is chosen once
+  instead of at every call site. The builder receives the asking button's foreground colour, so
+  one builder serves every `ButtonType`. A button's own `loadingIndicator` still wins over the
+  theme's, and Material's `CircularProgressIndicator` is the fallback.
+
+### Fixed
+
+- A loading `CustomButton` still took taps. It was given an empty callback, so Material treated it
+  as enabled: it rippled, took focus, answered the keyboard, and a second tap could start the work
+  again. It is now disabled while loading, keeping its own colours so it reads as busy rather than
+  unavailable.
+
+## 5.0.0
+
+### Breaking
+
+- `SpinKitIndicator` is removed, and `flutter_spinkit` is no longer a dependency. An app that
+  imported `flutter_spinkit` through this package must now depend on it directly.
+
+### Added
+
+- `CustomButton(loadingIndicator:)` takes any widget. The default loading state is Material's
+  `CircularProgressIndicator` in the button's own foreground colour.
+
+### Fixed
+
+- The loading spinner was always white, so an outlined button showed it white on a white surface.
+  It now follows the button's foreground.
+- A `CustomButton` label wider than the button overflowed instead of being trimmed. It is now one
+  line, ellipsized, with or without an icon.
+
+## 4.0.0
+
+### Breaking
+
+- Removed `AppTypography.fontFamily`, the `"YourFontName"` placeholder. The token styles now carry
+  only size and weight, and take the family from the theme.
+- Removed `TurkishPhoneFormatter`. It moved the caret to the end on every edit, so text couldn't be
+  corrected mid-string. Use any `TextInputFormatter` through `inputFormatters`.
+- Removed `CustomDropdownType.multiSelect`. `CustomDropdown` never handled it and silently fell back
+  to single selection. Use `CustomMultiSelectDropdown`.
+
+### Fixed
+
+- `AppTheme(fontFamily:)` never reached the text. `AppTypography`, `CustomButton`,
+  `CustomTextField` and the SnackBar helpers each stamped the placeholder family over the
+  theme's, and `AppTheme` now leaves the family unset when none is passed.
+- `ThemeNotifier` and `OnboardingState` threw `LateInitializationError` when a provider they watch
+  rebuilt, leaving them stuck in an error state. Riverpod re-runs `build()` on the same instance,
+  and their services sat in `late final` fields. `ThemeNotifier` also reads the stored mode again
+  after a rebuild, rather than stranding the app on light.
+- `DateHelper.getRelativeDate` counted elapsed hours, not calendar days, so a record from 23:00
+  read at 01:00 the next day said "today". It now compares midnights, and daylight saving no
+  longer shifts the labels.
+- `CustomMultiSelectDropdown`'s validator only ever saw `null`, so a "pick at least one" rule could
+  never pass. Tapping its arrow did nothing, and confirming handed the caller the sheet's own
+  mutable list. All three are fixed.
+- Both dropdown sheets now move up with the keyboard, which used to cover the search field and the
+  confirm button.
+
 ## 3.2.0
 
 ### Fixed
